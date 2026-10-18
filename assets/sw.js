@@ -1,8 +1,12 @@
-/* Reelio service worker — cache-first shell so the app NEVER updates itself
-   in the background. A new deploy only takes over when the user taps Update
-   (the page clears caches and cache-busts). Bump VERSION together with
-   version.json and APP_VERSION in index.html. */
-const VERSION = "1.5.0";
+/* Reelio service worker — STRICTLY manual updates. A new deploy only ever
+   takes over when the user taps Update on the banner or Check for Updates
+   in Settings; that tap is what makes the page clear caches and cache-bust.
+   A worker that activates on its own (browsers activate a waiting worker
+   once every app window has closed — no tap involved) must change NOTHING
+   the user sees: it keeps older caches and keeps serving the shell the
+   user last chose. Bump VERSION together with version.json and
+   APP_VERSION in index.html. */
+const VERSION = "1.5.2";
 const CACHE = "reelio-v" + VERSION;
 const CORE = [
   "./manifest.webmanifest",
@@ -24,11 +28,11 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("reelio-") && k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
+  // Do NOT delete older reelio caches here. If this worker activated on
+  // its own, the older cache still holds the shell the user last chose,
+  // and the fetch handler below keeps serving it. Caches are cleared only
+  // by the page, only when the user taps Update.
+  event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener("message", (event) => {
@@ -49,22 +53,27 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Page navigations + the app shell: cache-first. The cached shell keeps
-  // serving until the user taps Update, so reopening Reelio never silently
-  // swaps in a new version. The network is only a fallback for a first load
-  // (or offline fill), and that response becomes the cached shell.
+  // Page navigations + the app shell: cache-first, across EVERY reelio
+  // cache — this worker's own first, then any older one. The shell the
+  // user last chose keeps serving until they tap Update (the page clears
+  // all caches and cache-busts, so the next navigation lands here with no
+  // cached shell and fetches the new one). The network is only a fallback
+  // for a first-ever load, and that response becomes the cached shell.
   if (req.mode === "navigate" || url.pathname.endsWith("/") || url.pathname.endsWith("index.html")) {
     event.respondWith(
-      caches.match(req, { ignoreSearch: true }).then((cached) => {
-        if (cached) return cached;
-        return fetch(req, { cache: "no-store" })
-          .then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-            return res;
-          })
-          .catch(() => caches.match(req));
-      })
+      caches.open(CACHE)
+        .then((c) => c.match(req, { ignoreSearch: true }))
+        .then((hit) => hit || caches.match(req, { ignoreSearch: true }))
+        .then((cached) => {
+          if (cached) return cached;
+          return fetch(req, { cache: "no-store" })
+            .then((res) => {
+              const copy = res.clone();
+              caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+              return res;
+            })
+            .catch(() => caches.match(req));
+        })
     );
     return;
   }
