@@ -1,0 +1,1305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>Reelio</title>
+<style>
+  :root{
+    --teal:#17c3b2; --teal-bright:#2ee6cf; --teal-deep:#0b7a6e;
+    --bg:#0a0a0b; --bg-2:#121214; --bg-3:#1b1b1e; --panel:#141416;
+    --line:rgba(255,255,255,.09); --line-soft:rgba(255,255,255,.06);
+    --text:#f5f5f4; --text-2:#a7a7ab; --text-3:#6d6d72;
+    --bubble-me:#0e5f56; --bubble-them:#232326;
+    --danger:#ff5d5d; --heart:#ff4d6d;
+    --radius:14px;
+    --font:"Avenir Next","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --font-display:"Avenir Next","Segoe UI",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f4f4f2; --bg-2:#ffffff; --bg-3:#ececea; --panel:#ffffff;
+      --line:rgba(10,20,18,.12); --line-soft:rgba(10,20,18,.07);
+      --text:#131517; --text-2:#5b6066; --text-3:#8b9096;
+      --bubble-me:#0e7a6c; --bubble-them:#e9e9e6;
+    }
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{margin:0; font-family:var(--font); background:var(--bg); color:var(--text); overflow:hidden;}
+  button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+  input,textarea{font-family:inherit; color:inherit;}
+  img{display:block;}
+  ::selection{background:var(--teal); color:#04241f;}
+
+  /* ---------- App frame ---------- */
+  .app{display:grid; grid-template-columns:236px minmax(0,1fr) 300px; height:100dvh;}
+  .rail-right{display:block;}
+  @media (max-width:1240px){ .app{grid-template-columns:236px minmax(0,1fr);} .rail-right{display:none;} }
+  @media (max-width:760px){ .app{grid-template-columns:minmax(0,1fr);} }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{display:flex; flex-direction:column; gap:4px; padding:22px 14px 16px; border-right:1px solid var(--line-soft); background:var(--bg);}
+  .brand{display:flex; align-items:center; gap:11px; padding:2px 10px 20px;}
+  .ring{width:34px; height:34px; border-radius:50%; border:5px solid var(--teal); background:#000; flex:none; position:relative;}
+  .ring::after{content:""; position:absolute; inset:6px; border-radius:50%; background:radial-gradient(circle at 35% 30%, rgba(46,230,207,.5), rgba(46,230,207,0) 65%);}
+  .brand-name{font-family:var(--font-display); font-size:24px; font-weight:800; letter-spacing:-.02em; line-height:1;}
+  .brand-sub{font-size:11.5px; color:var(--text-2); margin-top:3px;}
+  .nav-item{display:flex; align-items:center; gap:13px; width:100%; padding:11px 12px; border-radius:10px; font-size:15.5px; font-weight:600; color:var(--text-2); text-align:left; position:relative; transition:background .15s,color .15s;}
+  .nav-item svg{width:23px; height:23px; flex:none;}
+  .nav-item:hover{background:var(--bg-3); color:var(--text);}
+  .nav-item.active{color:var(--text);}
+  .nav-item.active::before{content:""; position:absolute; left:-14px; top:9px; bottom:9px; width:3.5px; border-radius:3px; background:var(--teal);}
+  .nav-item .dot{margin-left:auto; background:var(--heart); color:#fff; font-size:11px; font-weight:700; min-width:19px; height:19px; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:0 5px;}
+  .upload-btn{margin:14px 4px 6px; background:var(--teal); color:#032723; font-weight:800; font-size:15.5px; padding:12px; border-radius:11px; display:flex; align-items:center; justify-content:center; gap:8px; transition:background .15s, transform .1s;}
+  .upload-btn:hover{background:var(--teal-bright);}
+  .upload-btn:active{transform:scale(.98);}
+  .upload-btn svg{width:20px; height:20px;}
+  .side-foot{margin-top:auto; padding:12px 10px 0; border-top:1px solid var(--line-soft);}
+  .me-row{display:flex; align-items:center; gap:10px; width:100%; padding:6px 2px; text-align:left; border-radius:10px;}
+  .me-row:hover{background:var(--bg-3);}
+  .me-row .who{min-width:0;}
+  .me-row .who b{display:block; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .me-row .who span{font-size:12.5px; color:var(--text-2);}
+  .side-note{font-size:11.5px; color:var(--text-3); line-height:1.55; padding:10px 2px 0;}
+
+  .avatar{border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; letter-spacing:.01em; overflow:hidden;}
+  .avatar.sm{width:34px; height:34px; font-size:13px;}
+  .avatar.md{width:44px; height:44px; font-size:16px;}
+  .avatar.lg{width:56px; height:56px; font-size:21px;}
+  .avatar.xl{width:96px; height:96px; font-size:36px;}
+
+  /* ---------- Main / views ---------- */
+  .main{position:relative; min-width:0; height:100dvh; background:var(--bg);}
+  .view{display:none; height:100%;}
+  .view.active{display:flex; flex-direction:column;}
+
+  /* ---------- Feed ---------- */
+  .feed-top{position:absolute; top:0; left:0; right:0; z-index:30; display:flex; align-items:center; justify-content:center; gap:26px; padding:16px 16px 26px; background:linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0)); pointer-events:none;}
+  .feed-top button{pointer-events:auto; font-size:16.5px; font-weight:700; color:rgba(255,255,255,.65); padding:4px 2px; position:relative; text-shadow:0 1px 8px rgba(0,0,0,.5);}
+  .feed-top button.on{color:#fff;}
+  .feed-top button.on::after{content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:-5px; width:26px; height:3px; border-radius:2px; background:var(--teal-bright);}
+  .feed-search{position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:auto; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff;}
+  .feed-search svg{width:24px; height:24px; filter:drop-shadow(0 1px 6px rgba(0,0,0,.6));}
+  .feed{flex:1; overflow-y:auto; scroll-snap-type:y mandatory; scrollbar-width:none; background:#000;}
+  .feed::-webkit-scrollbar{display:none;}
+  .reel{height:100%; scroll-snap-align:start; scroll-snap-stop:always; display:flex; align-items:center; justify-content:center; padding:18px 0;}
+  .reel-card{position:relative; height:100%; max-height:100%; aspect-ratio:9/16; max-width:min(430px, 94vw); border-radius:18px; overflow:hidden; background:#111; box-shadow:0 24px 70px rgba(0,0,0,.55); flex:none;}
+  @media (max-width:760px){
+    .reel{padding:0;}
+    .reel-card{max-width:100vw; width:100%; border-radius:0; box-shadow:none;}
+    .view{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
+    #view-feed{padding-bottom:0;}
+  }
+  .reel-card img.poster{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
+  .reel-card.playing img.poster{animation:kenburns 16s ease-in-out infinite alternate;}
+  @keyframes kenburns{from{transform:scale(1) translateY(0);} to{transform:scale(1.09) translateY(-1.5%);}}
+  @media (prefers-reduced-motion: reduce){ .reel-card.playing img.poster{animation:none;} }
+  .reel-shade{position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.18) 34%, rgba(0,0,0,0) 55%, rgba(0,0,0,.28) 100%); pointer-events:none;}
+  .reel-meta{position:absolute; left:14px; right:78px; bottom:16px; color:#fff; z-index:5;}
+  .reel-author{display:flex; align-items:center; gap:9px; font-weight:800; font-size:16.5px; text-shadow:0 1px 6px rgba(0,0,0,.55);}
+  .follow-chip{font-size:12.5px; font-weight:700; border:1.5px solid var(--teal-bright); color:var(--teal-bright); border-radius:7px; padding:3px 9px; background:rgba(0,0,0,.25);}
+  .follow-chip.following{border-color:rgba(255,255,255,.5); color:#fff;}
+  .reel-cap{margin-top:9px; font-size:14.5px; line-height:1.45; text-shadow:0 1px 6px rgba(0,0,0,.6); max-width:46ch;}
+  .reel-tags{margin-top:6px; font-size:13.5px; font-weight:700; color:#dffcf6; text-shadow:0 1px 6px rgba(0,0,0,.6);}
+  .reel-tags span{margin-right:9px;}
+  .reel-rail{position:absolute; right:10px; bottom:14px; z-index:6; display:flex; flex-direction:column; align-items:center; gap:15px;}
+  .rail-btn{display:flex; flex-direction:column; align-items:center; gap:3px; color:#fff; font-size:12px; font-weight:700; text-shadow:0 1px 5px rgba(0,0,0,.5);}
+  .rail-btn .ic{width:47px; height:47px; border-radius:50%; background:rgba(18,18,20,.42); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; transition:transform .12s, background .15s;}
+  .rail-btn:active .ic{transform:scale(.9);}
+  .rail-btn svg{width:25px; height:25px;}
+  .rail-btn.liked .ic svg{fill:var(--heart); stroke:var(--heart);}
+  .rail-btn.saved .ic svg{fill:#ffd34d; stroke:#ffd34d;}
+  .rail-avatar{position:relative; margin-bottom:4px;}
+  .rail-avatar .plus{position:absolute; left:50%; bottom:-8px; transform:translateX(-50%); width:19px; height:19px; border-radius:50%; background:var(--teal); color:#032723; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; line-height:1;}
+  .rail-avatar .plus.done{background:#fff; font-size:11px;}
+  .reel-progress{position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(255,255,255,.22); z-index:7;}
+  .reel-progress i{display:block; height:100%; width:0%; background:var(--teal-bright);}
+  .reel-card.playing .reel-progress i{animation:prog 14s linear infinite;}
+  @keyframes prog{from{width:0%;} to{width:100%;}}
+  .paused-badge{position:absolute; inset:0; display:none; align-items:center; justify-content:center; z-index:4; pointer-events:none;}
+  .reel-card:not(.playing) .paused-badge{display:flex;}
+  .paused-badge span{width:74px; height:74px; border-radius:50%; background:rgba(0,0,0,.42); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center;}
+  .paused-badge svg{width:32px; height:32px; fill:#fff; margin-left:4px;}
+  .big-heart{position:absolute; z-index:8; pointer-events:none; opacity:0; transform:scale(.4);}
+  .big-heart.pop{animation:heartpop .8s ease forwards;}
+  @keyframes heartpop{0%{opacity:0; transform:scale(.4) rotate(-8deg);} 22%{opacity:1; transform:scale(1.15) rotate(3deg);} 45%{transform:scale(1);} 100%{opacity:0; transform:scale(1.05) translateY(-26px);}}
+  .big-heart svg{width:92px; height:92px; fill:var(--heart); stroke:#fff; stroke-width:1.2; filter:drop-shadow(0 8px 24px rgba(0,0,0,.45));}
+  .feed-nav-hint{position:absolute; right:18px; top:50%; transform:translateY(-50%); z-index:20; display:flex; flex-direction:column; gap:8px;}
+  .feed-nav-hint button{width:38px; height:38px; border-radius:50%; background:rgba(20,20,22,.55); border:1px solid var(--line); color:#fff; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(6px);}
+  .feed-nav-hint svg{width:19px; height:19px;}
+  @media (max-width:760px){ .feed-nav-hint{display:none;} }
+
+  /* ---------- Right rail ---------- */
+  .rail-right{border-left:1px solid var(--line-soft); padding:22px 18px; overflow-y:auto; background:var(--bg);}
+  .rail-right h3{font-size:13px; letter-spacing:.07em; text-transform:uppercase; color:var(--text-3); margin:0 0 12px;}
+  .sugg{display:flex; align-items:center; gap:10px; padding:8px 0;}
+  .sugg .who{min-width:0; flex:1;}
+  .sugg .who b{display:block; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .sugg .who span{font-size:12.5px; color:var(--text-2);}
+  .follow-btn{font-size:13.5px; font-weight:800; color:var(--teal); padding:6px 4px;}
+  .follow-btn.following{color:var(--text-3); font-weight:600;}
+  .tag-cloud{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px;}
+  .tag-chip{border:1px solid var(--line); border-radius:999px; padding:6px 12px; font-size:13.5px; font-weight:600; color:var(--text);}
+  .tag-chip:hover{border-color:var(--teal); color:var(--teal);}
+  .tag-chip small{color:var(--text-3); font-weight:500; margin-left:5px;}
+  .rail-card{border:1px solid var(--line-soft); border-radius:var(--radius); padding:14px; margin-bottom:26px; background:var(--bg-2);}
+  .rail-card b{font-size:14.5px; display:block; margin-bottom:5px;}
+  .rail-card p{margin:0; font-size:13px; line-height:1.55; color:var(--text-2);}
+
+  /* ---------- Discover ---------- */
+  .page-head{padding:22px 26px 8px; max-width:1060px; width:100%; margin:0 auto;}
+  .page-head h1{font-size:27px; margin:0 0 4px; letter-spacing:-.02em; font-family:var(--font-display);}
+  .page-head p{margin:0; color:var(--text-2); font-size:14.5px;}
+  .search-wrap{max-width:1060px; width:100%; margin:0 auto; padding:18px 26px 2px;}
+  .searchbar{display:flex; align-items:center; gap:10px; background:var(--bg-3); border:1px solid var(--line-soft); border-radius:12px; padding:0 14px; width:100%;}
+  .searchbar svg{width:19px; height:19px; color:var(--text-3); flex:none;}
+  .searchbar input{flex:1; border:none; background:none; outline:none; font-size:15.5px; padding:13px 0; color:var(--text); min-width:0;}
+  .scroll-area{flex:1; overflow-y:auto; padding-bottom:30px;}
+  .disc-section{max-width:1060px; margin:0 auto; padding:16px 26px 0;}
+  .disc-section h2{font-size:17px; margin:0 0 13px;}
+  .thumb-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(158px,1fr)); gap:10px;}
+  .thumb{position:relative; border-radius:12px; overflow:hidden; aspect-ratio:3/4; background:#111; text-align:left; padding:0; width:100%;}
+  .thumb img{width:100%; height:100%; object-fit:cover; transition:transform .3s;}
+  .thumb:hover img{transform:scale(1.05);}
+  .thumb .t-meta{position:absolute; left:0; right:0; bottom:0; padding:22px 10px 9px; background:linear-gradient(to top, rgba(0,0,0,.75), transparent); color:#fff;}
+  .thumb .t-meta b{display:block; font-size:13px; line-height:1.3;}
+  .thumb .t-meta span{font-size:12px; color:rgba(255,255,255,.75); display:flex; align-items:center; gap:4px; margin-top:3px;}
+  .thumb .t-meta svg{width:13px; height:13px;}
+  .creator-row{display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; scrollbar-width:none;}
+  .creator-row::-webkit-scrollbar{display:none;}
+  .creator-card{flex:none; width:158px; border:1px solid var(--line-soft); background:var(--bg-2); border-radius:var(--radius); padding:16px 12px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:3px;}
+  .creator-card b{font-size:14.5px; margin-top:7px;}
+  .creator-card span{font-size:12.5px; color:var(--text-2);}
+  .creator-card .follow-btn{margin-top:8px; border:1.5px solid var(--teal); border-radius:8px; padding:5px 16px;}
+  .creator-card .follow-btn.following{border-color:var(--line); color:var(--text-3);}
+  .empty-note{color:var(--text-2); font-size:14.5px; padding:14px 0;}
+
+  /* ---------- Inbox ---------- */
+  .inbox-wrap{flex:1; display:grid; grid-template-columns:342px minmax(0,1fr); min-height:0;}
+  @media (max-width:760px){ .inbox-wrap{grid-template-columns:minmax(0,1fr);} }
+  .chat-list{border-right:1px solid var(--line-soft); display:flex; flex-direction:column; min-height:0; background:var(--bg);}
+  .chat-list-head{padding:20px 18px 10px; display:flex; align-items:center; justify-content:space-between;}
+  .chat-list-head h1{font-size:23px; margin:0; font-family:var(--font-display); letter-spacing:-.02em;}
+  .icon-btn{width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-2);}
+  .icon-btn:hover{background:var(--bg-3); color:var(--text);}
+  .icon-btn svg{width:20px; height:20px;}
+  .chat-search{margin:4px 14px 10px; display:flex; align-items:center; gap:8px; background:var(--bg-3); border-radius:10px; padding:0 12px;}
+  .chat-search svg{width:16px; height:16px; color:var(--text-3); flex:none;}
+  .chat-search input{flex:1; border:none; background:none; outline:none; padding:9px 0; font-size:14px; min-width:0;}
+  .chat-items{flex:1; overflow-y:auto; padding:2px 8px 14px;}
+  .chat-item{display:flex; gap:11px; width:100%; padding:11px 10px; border-radius:12px; text-align:left; align-items:flex-start;}
+  .chat-item:hover{background:var(--bg-3);}
+  .chat-item.active{background:var(--bg-3); box-shadow:inset 3px 0 0 var(--teal);}
+  .chat-item .ci-main{flex:1; min-width:0;}
+  .chat-item .ci-top{display:flex; align-items:baseline; gap:8px;}
+  .chat-item .ci-top b{font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; min-width:0;}
+  .chat-item .ci-top time{font-size:11.5px; color:var(--text-3); flex:none;}
+  .chat-item .ci-sub{font-size:13.5px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;}
+  .chat-item .unread{flex:none; background:var(--teal); color:#032723; font-size:11px; font-weight:800; min-width:19px; height:19px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-top:3px;}
+  .group-badge{position:absolute; right:-2px; bottom:-2px; width:16px; height:16px; border-radius:50%; background:var(--teal); border:2px solid var(--bg); display:flex; align-items:center; justify-content:center;}
+  .group-badge svg{width:9px; height:9px; color:#032723;}
+  .avatar-wrap{position:relative; flex:none;}
+
+  /* Thread */
+  .thread{display:flex; flex-direction:column; min-height:0; min-width:0; background:var(--bg);}
+  .thread-head{display:flex; align-items:center; gap:11px; padding:12px 16px; border-bottom:1px solid var(--line-soft); background:var(--bg); z-index:5;}
+  .thread-head .th-main{flex:1; min-width:0; text-align:left; padding:2px 0;}
+  .thread-head .th-main b{display:block; font-size:16.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .thread-head .th-main span{font-size:12.5px; color:var(--text-2); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .back-btn{display:none;}
+  @media (max-width:760px){
+    .back-btn{display:flex;}
+    .inbox-wrap.thread-open .chat-list{display:none;}
+    .inbox-wrap:not(.thread-open) .thread{display:none;}
+  }
+  .thread-msgs{flex:1; overflow-y:auto; padding:20px 18px 12px; display:flex; flex-direction:column; gap:3px; transition:background .25s;}
+  .wp-none{background:var(--bg);}
+  .wp-teal{background:linear-gradient(160deg, #06231f, #0a3a33 55%, #06231f);}
+  .wp-sunset{background:linear-gradient(165deg, #2b1530, #57253a 55%, #8a3b2e);}
+  .wp-grid{background-color:#101216; background-image:linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size:26px 26px;}
+  .wp-dots{background-color:#141210; background-image:radial-gradient(rgba(255,210,140,.16) 1.6px, transparent 1.7px); background-size:22px 22px;}
+  .wp-ocean{background:linear-gradient(170deg, #071c30, #0a3552 60%, #0b5563);}
+  @media (prefers-color-scheme: light){
+    .wp-teal{background:linear-gradient(160deg, #d9f5ef, #b7e9de);}
+    .wp-sunset{background:linear-gradient(165deg, #f7e3ec, #f3cdb4);}
+    .wp-grid{background-color:#eef0ee;}
+    .wp-dots{background-color:#f6f1e7;}
+    .wp-ocean{background:linear-gradient(170deg, #d8ecf7, #b5dde8);}
+  }
+  .day-chip{align-self:center; font-size:11.5px; font-weight:700; color:var(--text-2); background:var(--bg-3); border-radius:999px; padding:4px 11px; margin:8px 0 12px;}
+  .msg-row{display:flex; gap:8px; align-items:flex-end; max-width:78%; position:relative;}
+  .msg-row.me{align-self:flex-end; flex-direction:row-reverse;}
+  .msg-row.them{align-self:flex-start;}
+  .msg-row .avatar{margin-bottom:2px;}
+  .msg-stack{display:flex; flex-direction:column; min-width:0;}
+  .msg-row.me .msg-stack{align-items:flex-end;}
+  .sender-name{font-size:12px; font-weight:700; color:var(--text-2); margin:0 0 3px 4px;}
+  .bubble{padding:9px 13px; border-radius:19px; font-size:15px; line-height:1.45; word-break:break-word; position:relative; cursor:default;}
+  .msg-row.them .bubble{background:var(--bubble-them); border-bottom-left-radius:6px; color:var(--text);}
+  .msg-row.me .bubble{background:var(--bubble-me); border-bottom-right-radius:6px; color:#eafffb;}
+  @media (prefers-color-scheme: light){ .msg-row.me .bubble{color:#fff;} }
+  .bubble .edited-tag{font-size:11px; opacity:.65; margin-left:6px; font-style:italic;}
+  .msg-meta{display:flex; align-items:center; gap:7px; margin:3px 4px 7px; font-size:11px; color:var(--text-3);}
+  .msg-row.me .msg-meta{flex-direction:row-reverse;}
+  .msg-actions{opacity:0; display:flex; gap:2px; align-self:center; transition:opacity .15s; flex:none;}
+  .msg-row:hover .msg-actions, .msg-row:focus-within .msg-actions{opacity:1;}
+  @media (hover:none){ .msg-actions{opacity:.55;} }
+  .msg-actions button{width:27px; height:27px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-3); background:var(--bg-3);}
+  .msg-actions svg{width:15px; height:15px;}
+  .reactions{display:flex; flex-wrap:wrap; gap:4px; margin:3px 2px 6px;}
+  .msg-row.me .reactions{justify-content:flex-end;}
+  .reaction-chip{display:flex; align-items:center; gap:4px; background:var(--bg-3); border:1px solid var(--line); border-radius:999px; padding:2px 8px 2px 6px; font-size:13.5px; line-height:1.5;}
+  .reaction-chip.mine{border-color:var(--teal); background:rgba(23,195,178,.14);}
+  .reaction-chip small{font-size:11.5px; color:var(--text-2); font-weight:700;}
+  .composer{display:flex; align-items:flex-end; gap:9px; padding:11px 14px calc(11px + env(safe-area-inset-bottom)); border-top:1px solid var(--line-soft); background:var(--bg);}
+  .composer .box{flex:1; display:flex; align-items:flex-end; background:var(--bg-3); border:1px solid var(--line-soft); border-radius:22px; padding:4px 6px 4px 15px; min-width:0;}
+  .composer textarea{flex:1; border:none; background:none; outline:none; resize:none; font-size:15px; max-height:110px; padding:8px 0; min-width:0; color:var(--text);}
+  .composer .send-btn{width:42px; height:42px; border-radius:50%; background:var(--teal); color:#032723; display:flex; align-items:center; justify-content:center; flex:none; transition:transform .1s, background .15s;}
+  .composer .send-btn:hover{background:var(--teal-bright);}
+  .composer .send-btn:active{transform:scale(.93);}
+  .composer .send-btn svg{width:19px; height:19px; margin-left:2px;}
+  .composer .tool-btn{width:38px; height:42px; display:flex; align-items:center; justify-content:center; color:var(--text-2); flex:none;}
+  .composer .tool-btn svg{width:21px; height:21px;}
+  .edit-banner{display:none; align-items:center; gap:9px; padding:8px 16px; background:var(--bg-3); border-top:1px solid var(--line-soft); font-size:13px; color:var(--text-2);}
+  .edit-banner.show{display:flex;}
+  .edit-banner b{color:var(--teal); font-weight:700;}
+  .edit-banner span{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .thread-empty{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--text-2); padding:30px; text-align:center;}
+  .thread-empty .ring{width:52px; height:52px; border-width:7px; margin-bottom:6px;}
+  @media (max-width:760px){ .thread-empty-wrap{display:none;} }
+
+  /* ---------- Profile ---------- */
+  .profile-scroll{flex:1; overflow-y:auto;}
+  .profile-inner{max-width:880px; margin:0 auto; padding:30px 26px 40px; width:100%;}
+  .profile-top{display:flex; gap:26px; align-items:center; flex-wrap:wrap;}
+  .profile-id{min-width:0;}
+  .profile-id h1{font-size:24px; margin:0; font-family:var(--font-display); letter-spacing:-.02em; display:flex; align-items:center; gap:8px;}
+  .verified{width:19px; height:19px; color:var(--teal); flex:none;}
+  .profile-id .handle{color:var(--text-2); font-size:14.5px; margin-top:2px;}
+  .profile-stats{display:flex; gap:34px; margin:20px 0 4px; flex-wrap:wrap;}
+  .pstat{text-align:left;}
+  .pstat b{font-size:19px; display:block;}
+  .pstat span{font-size:13px; color:var(--text-2);}
+  .profile-bio{font-size:15px; line-height:1.55; margin:14px 0 0; max-width:52ch;}
+  .profile-actions{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;}
+  .btn{border-radius:10px; padding:10px 22px; font-size:15px; font-weight:700; display:inline-flex; align-items:center; gap:8px;}
+  .btn-teal{background:var(--teal); color:#032723;}
+  .btn-teal:hover{background:var(--teal-bright);}
+  .btn-ghost{border:1px solid var(--line); color:var(--text);}
+  .btn-ghost:hover{border-color:var(--text-3);}
+  .profile-tabs{display:flex; gap:4px; border-bottom:1px solid var(--line-soft); margin-top:28px;}
+  .profile-tabs button{padding:10px 16px; font-size:15px; font-weight:700; color:var(--text-3); border-bottom:2.5px solid transparent; margin-bottom:-1px; display:flex; gap:7px; align-items:center;}
+  .profile-tabs button.on{color:var(--text); border-color:var(--teal);}
+  .profile-tabs svg{width:17px; height:17px;}
+
+  /* ---------- Sheets / modals / menus ---------- */
+  .scrim{position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(2px); z-index:80; display:none;}
+  .scrim.show{display:block;}
+  .sheet{position:fixed; z-index:90; background:var(--bg-2); color:var(--text); display:none; flex-direction:column; box-shadow:0 -18px 60px rgba(0,0,0,.5);}
+  .sheet.show{display:flex;}
+  @media (min-width:761px){
+    .sheet{left:50%; top:50%; transform:translate(-50%,-50%); width:min(480px, 92vw); max-height:86dvh; border-radius:18px; border:1px solid var(--line);}
+  }
+  @media (max-width:760px){
+    .sheet{left:0; right:0; bottom:0; max-height:88dvh; border-radius:20px 20px 0 0;}
+  }
+  .sheet-grab{display:none;}
+  @media (max-width:760px){ .sheet-grab{display:block; width:42px; height:4.5px; border-radius:3px; background:var(--line); margin:10px auto 2px;} }
+  .sheet-head{display:flex; align-items:center; justify-content:space-between; padding:14px 18px 10px;}
+  .sheet-head h2{font-size:18px; margin:0; font-family:var(--font-display);}
+  .sheet-body{overflow-y:auto; padding:4px 18px 20px;}
+  .sheet-body .hint{font-size:13px; color:var(--text-2); line-height:1.5; margin:0 0 12px;}
+  .field label{display:block; font-size:12.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--text-3); margin:14px 0 7px;}
+  .field input[type="text"], .field textarea{width:100%; background:var(--bg-3); border:1px solid var(--line-soft); border-radius:10px; padding:11px 13px; font-size:15px; outline:none;}
+  .field input[type="text"]:focus, .field textarea:focus{border-color:var(--teal);}
+  .nick-row{display:flex; align-items:center; gap:10px; padding:8px 0;}
+  .nick-row .who{flex:1; min-width:0;}
+  .nick-row .who b{display:block; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .nick-row .who span{font-size:12.5px; color:var(--text-2);}
+  .field .nick-row input[type="text"]{width:150px; flex:none;}
+  .nick-row input:focus{border-color:var(--teal);}
+  .wp-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:6px;}
+  .wp-swatch{height:64px; border-radius:12px; border:2.5px solid transparent; position:relative; overflow:hidden; padding:0;}
+  .wp-swatch.on{border-color:var(--teal);}
+  .wp-swatch span{position:absolute; left:0; right:0; bottom:0; font-size:11px; font-weight:700; padding:3px 0; background:rgba(0,0,0,.5); color:#fff;}
+  .sheet-actions{display:flex; gap:10px; padding:0 18px 18px;}
+  .sheet-actions .btn{flex:1; justify-content:center;}
+
+  .menu{position:fixed; z-index:120; background:var(--bg-2); border:1px solid var(--line); border-radius:13px; box-shadow:0 16px 44px rgba(0,0,0,.45); padding:5px; min-width:196px; display:none;}
+  .menu.show{display:block;}
+  .menu button{display:flex; align-items:center; gap:10px; width:100%; padding:9px 11px; border-radius:8px; font-size:14.5px; font-weight:600; text-align:left; color:var(--text);}
+  .menu button:hover{background:var(--bg-3);}
+  .menu button.danger{color:var(--danger);}
+  .menu svg{width:17px; height:17px; flex:none;}
+
+  .react-pop{position:fixed; z-index:120; background:var(--bg-2); border:1px solid var(--line); border-radius:999px; box-shadow:0 14px 40px rgba(0,0,0,.5); padding:6px 8px; display:none; align-items:center; gap:2px;}
+  .react-pop.show{display:flex;}
+  .react-pop button{font-size:21px; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:transform .12s; line-height:1;}
+  .react-pop button:hover{transform:scale(1.22); background:var(--bg-3);}
+  .react-pop .any-emoji{border-left:1px solid var(--line); margin-left:4px; padding-left:8px; display:flex; align-items:center; gap:5px;}
+  .react-pop .any-emoji input{width:58px; border:none; background:var(--bg-3); border-radius:8px; font-size:16px; padding:5px 7px; outline:none; text-align:center;}
+
+  .comment-list{display:flex; flex-direction:column; gap:16px; padding-top:6px;}
+  .comment{display:flex; gap:10px;}
+  .comment .c-main{flex:1; min-width:0;}
+  .comment .c-main b{font-size:13.5px;}
+  .comment .c-main p{margin:2px 0 3px; font-size:14.5px; line-height:1.45;}
+  .comment .c-main span{font-size:12px; color:var(--text-3);}
+  .comment .c-like{display:flex; flex-direction:column; align-items:center; gap:1px; color:var(--text-3); font-size:11.5px;}
+  .comment .c-like svg{width:17px; height:17px;}
+  .comment .c-like.liked{color:var(--heart);}
+  .comment .c-like.liked svg{fill:var(--heart); stroke:var(--heart);}
+
+  .upload-drop{border:2px dashed var(--line); border-radius:14px; padding:26px 18px; text-align:center; color:var(--text-2); font-size:14.5px; line-height:1.55;}
+  .upload-drop b{color:var(--text); display:block; font-size:16px; margin-bottom:4px;}
+  .upload-preview{display:none; border-radius:14px; overflow:hidden; background:#000; aspect-ratio:9/16; max-height:320px; margin:0 auto;}
+  .upload-preview.show{display:block;}
+  .upload-preview img, .upload-preview video{width:100%; height:100%; object-fit:cover;}
+
+  /* ---------- Create-post picker ---------- */
+  .pick-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .pick-btn{display:flex; flex-direction:column; align-items:center; gap:7px; padding:18px 10px 15px; border:1.5px dashed var(--line); border-radius:14px; font-size:14.5px; font-weight:700; color:var(--text); background:var(--bg-2); transition:border-color .15s, color .15s;}
+  .pick-btn:hover{border-color:var(--teal); color:var(--teal);}
+  .pick-btn svg{width:26px; height:26px;}
+  .pick-btn span{font-size:12px; font-weight:600; color:var(--text-2);}
+  .pick-change{display:none; margin:10px auto 0; font-size:13.5px; font-weight:700; color:var(--teal); padding:6px 10px;}
+  .pick-change.show{display:block;}
+
+  /* ---------- Empty states ---------- */
+  .empty-state{display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:9px; padding:44px 26px; color:var(--text-2);}
+  .empty-state .ring{width:50px; height:50px; border-width:6px; margin-bottom:4px;}
+  .empty-state b{font-size:17px; color:var(--text);}
+  .empty-state p{margin:0; font-size:14.5px; line-height:1.55; max-width:38ch;}
+  .empty-state .btn{margin-top:8px;}
+  .feed .empty-state{height:100%; color:rgba(255,255,255,.7);}
+  .feed .empty-state b{color:#fff;}
+  .thumb video{width:100%; height:100%; object-fit:cover; transition:transform .3s;}
+  .thumb:hover video{transform:scale(1.05);}
+
+  .toast{position:fixed; left:50%; bottom:96px; transform:translateX(-50%) translateY(20px); background:#1d2b28; color:#eafffb; border:1px solid rgba(46,230,207,.35); padding:11px 18px; border-radius:999px; font-size:14px; font-weight:600; z-index:200; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; max-width:88vw; text-align:center; box-shadow:0 14px 40px rgba(0,0,0,.45);}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  @media (min-width:761px){ .toast{bottom:34px;} }
+
+  /* ---------- Bottom nav (mobile) ---------- */
+  .bottom-nav{display:none;}
+  @media (max-width:760px){
+    .sidebar{display:none;}
+    .bottom-nav{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:60; background:rgba(8,8,9,.92); backdrop-filter:blur(14px); border-top:1px solid rgba(255,255,255,.08); padding:6px 8px calc(6px + env(safe-area-inset-bottom)); justify-content:space-around;}
+    @media (prefers-color-scheme: light){ .bottom-nav{background:rgba(255,255,255,.94); border-top-color:rgba(0,0,0,.08);} }
+    .bottom-nav button{display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; font-weight:600; color:var(--text-2); padding:4px 10px; position:relative;}
+    .bottom-nav button.on{color:var(--text);}
+    .bottom-nav svg{width:24px; height:24px;}
+    .bottom-nav .dot{position:absolute; top:0; right:8px; background:var(--heart); color:#fff; font-size:10px; font-weight:800; min-width:17px; height:17px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 4px;}
+    .bottom-nav .create-btn{width:46px; height:32px; border-radius:9px; background:var(--teal); color:#032723; display:flex; align-items:center; justify-content:center; margin-top:2px;}
+    .bottom-nav .create-btn svg{width:21px; height:21px;}
+    .main{padding-bottom:0;}
+    .view-feed-pad{padding-bottom:64px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ============ SIDEBAR (desktop) ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="ring" aria-hidden="true"></div>
+      <div>
+        <div class="brand-name">Reelio</div>
+        <div class="brand-sub">Photos and short videos</div>
+      </div>
+    </div>
+    <nav id="sideNav">
+      <button class="nav-item active" data-view="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>For You</button>
+      <button class="nav-item" data-view="discover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</button>
+      <button class="nav-item" data-view="inbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg>Messages<span class="dot" id="sideUnread">3</span></button>
+      <button class="nav-item" data-view="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-5.5 8-5.5s6.5 1.5 8 5.5"/></svg>Profile</button>
+    </nav>
+    <button class="upload-btn" id="sideUpload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Create post</button>
+    <div class="side-foot">
+      <button class="me-row" data-view="profile">
+        <span class="avatar sm" style="background:#0e7a6c">L</span>
+        <span class="who"><b>Liam</b><span>@hoopslimbo</span></span>
+      </button>
+      <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <!-- FEED -->
+    <section class="view active" id="view-feed">
+      <div class="feed-top">
+        <button data-feedtab="following">Following</button>
+        <button class="on" data-feedtab="foryou">For You</button>
+        <button class="feed-search" id="feedSearchBtn" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg></button>
+      </div>
+      <div class="feed" id="feed"></div>
+      <div class="feed-nav-hint">
+        <button id="feedUp" aria-label="Previous video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></button>
+        <button id="feedDown" aria-label="Next video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      </div>
+    </section>
+
+    <!-- DISCOVER -->
+    <section class="view" id="view-discover">
+      <div class="search-wrap">
+        <div class="searchbar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+          <input type="text" id="discoverSearch" placeholder="Search people, posts, #tags" />
+        </div>
+      </div>
+      <div class="scroll-area" id="discoverScroll">
+        <div class="disc-section">
+          <h2>Latest posts</h2>
+          <div class="thumb-grid" id="thumbGrid"></div>
+          <p class="empty-note" id="discoverEmpty" style="display:none;">Nothing here at the moment.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- INBOX -->
+    <section class="view" id="view-inbox">
+      <div class="inbox-wrap" id="inboxWrap">
+        <div class="chat-list">
+          <div class="chat-list-head">
+            <h1>Messages</h1>
+            <button class="icon-btn" id="newChatBtn" aria-label="New message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+          </div>
+          <div class="chat-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+            <input type="text" id="chatSearch" placeholder="Search chats" />
+          </div>
+          <div class="chat-items" id="chatItems"></div>
+        </div>
+        <div class="thread" id="threadPane">
+          <div class="thread-empty-wrap" id="threadEmptyWrap" style="display:contents;">
+            <div class="thread-empty" id="threadEmpty">
+              <div class="ring" aria-hidden="true"></div>
+              <b style="font-size:17px; color:var(--text);">Your messages</b>
+              <span>Nothing here at the moment. Start a new chat and it'll show up here — double-tap any message to drop a ❤️ on it.</span>
+            </div>
+          </div>
+          <div id="threadLive" style="display:none; flex-direction:column; flex:1; min-height:0;">
+            <div class="thread-head">
+              <button class="icon-btn back-btn" id="threadBack" aria-label="Back to chats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>
+              <span id="threadAvatar"></span>
+              <button class="th-main" id="threadTitleBtn">
+                <b id="threadName"></b>
+                <span id="threadSub"></span>
+              </button>
+              <button class="icon-btn" id="customizeBtn" aria-label="Customize chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.51 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.23.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg></button>
+            </div>
+            <div class="thread-msgs wp-none" id="threadMsgs"></div>
+            <div class="edit-banner" id="editBanner"><b>Editing</b><span id="editBannerText"></span><button class="icon-btn" id="editCancel" aria-label="Cancel editing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+            <form class="composer" id="composer">
+              <button type="button" class="tool-btn" id="emojiBtn" aria-label="Emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.2 1.8 3.5 1.8 3.5-1.8 3.5-1.8"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="3"/></svg></button>
+              <div class="box">
+                <textarea id="composerInput" rows="1" placeholder="Message…"></textarea>
+              </div>
+              <button type="submit" class="send-btn" aria-label="Send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21.8 12 3.4 3.6l-.01 6.53L14 12 3.39 13.87z"/></svg></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="view" id="view-profile">
+      <div class="profile-scroll">
+        <div class="profile-inner">
+          <div class="profile-top">
+            <span class="avatar xl" style="background:#0e7a6c">L</span>
+            <div class="profile-id">
+              <h1>Liam <svg class="verified" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 14.4 4.1 17.5 3.7 18.3 6.7 21 8.3 19.9 11.2 21 14.1 18.3 15.7 17.5 18.7 14.4 18.3 12 20.4 9.6 18.3 6.5 18.7 5.7 15.7 3 14.1 4.1 11.2 3 8.3 5.7 6.7 6.5 3.7 9.6 4.1z" transform="scale(.92) translate(1,1)"/><path d="m9.2 12.2 2 2 3.8-4" stroke="#0a0a0b" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></h1>
+              <div class="handle">@hoopslimbo</div>
+              <div class="profile-stats">
+                <div class="pstat"><b id="statFollowing">0</b><span>Following</span></div>
+                <div class="pstat"><b id="statFollowers">0</b><span>Followers</span></div>
+                <div class="pstat"><b id="statLikes">0</b><span>Likes</span></div>
+              </div>
+            </div>
+          </div>
+          <p class="profile-bio">Making stuff and posting the process. Skate clips, desk builds, and whatever the group chat dares me to try.</p>
+          <div class="profile-actions">
+            <button class="btn btn-teal" id="profileUpload">Create a post</button>
+            <button class="btn btn-ghost" id="editProfileBtn">Edit profile</button>
+          </div>
+          <div class="profile-tabs">
+            <button class="on" data-ptab="videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>Videos</button>
+            <button data-ptab="liked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.7C6 16.6 3 13.2 3 9.6 3 7 5 5 7.4 5c1.7 0 3.4 1 4.6 2.7C13.2 6 14.9 5 16.6 5 19 5 21 7 21 9.6c0 3.6-3 7-9 11.1z"/></svg>Liked</button>
+          </div>
+          <div class="thumb-grid" id="profileGrid" style="margin-top:14px;"></div>
+          <p class="empty-note" id="profileEmpty" style="display:none;">Videos you like will show up here.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ RIGHT RAIL (desktop) ============ -->
+  <aside class="rail-right">
+    <div class="rail-card">
+      <b>Why Reelio feels different</b>
+      <p>The feed is just posts and people. There's no shop tab, no coins, no gifts — nothing here is trying to sell you anything.</p>
+    </div>
+    <p style="font-size:12px; color:var(--text-3); line-height:1.6;">Reelio — watch, post, talk.<br/>Posts stay vertical, the way they were filmed.</p>
+  </aside>
+</div>
+
+<!-- ============ BOTTOM NAV (mobile) ============ -->
+<nav class="bottom-nav" id="bottomNav">
+  <button data-view="feed" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>Home</button>
+  <button data-view="discover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</button>
+  <button id="mobileUpload" aria-label="Upload"><span class="create-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+  <button data-view="inbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg>Messages<span class="dot" id="mobileUnread">3</span></button>
+  <button data-view="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-5.5 8-5.5s6.5 1.5 8 5.5"/></svg>Profile</button>
+</nav>
+
+<!-- ============ COMMENTS SHEET ============ -->
+<div class="scrim" id="scrim"></div>
+<section class="sheet" id="commentsSheet" aria-label="Comments">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><h2 id="commentsTitle">Comments</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="sheet-body">
+    <div class="comment-list" id="commentList"></div>
+  </div>
+  <form class="composer" id="commentForm" style="border-top:1px solid var(--line-soft);">
+    <span class="avatar sm" style="background:#0e7a6c">L</span>
+    <div class="box"><textarea id="commentInput" rows="1" placeholder="Add a comment…"></textarea></div>
+    <button type="submit" class="send-btn" aria-label="Post comment"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21.8 12 3.4 3.6l-.01 6.53L14 12 3.39 13.87z"/></svg></button>
+  </form>
+</section>
+
+<!-- ============ CUSTOMIZE CHAT SHEET ============ -->
+<section class="sheet" id="customizeSheet" aria-label="Customize chat">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><h2>Customize chat</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="sheet-body">
+    <div class="field">
+      <label for="chatNameInput">Chat name</label>
+      <input type="text" id="chatNameInput" placeholder="Name this chat" />
+    </div>
+    <div class="field">
+      <label>Nicknames</label>
+      <p class="hint">Nicknames only show in this chat — give people the name everyone here actually calls them.</p>
+      <div id="nickList"></div>
+    </div>
+    <div class="field">
+      <label>Wallpaper</label>
+      <div class="wp-grid" id="wpGrid"></div>
+    </div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn btn-ghost" data-close>Cancel</button>
+    <button class="btn btn-teal" id="customizeSave">Save changes</button>
+  </div>
+</section>
+
+<!-- ============ CREATE POST SHEET ============ -->
+<section class="sheet" id="uploadSheet" aria-label="Create a post">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><h2>New post</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="sheet-body">
+    <p class="hint">Post a photo or a video — upload one you already have, or take a fresh one. It'll appear at the top of your feed and on your profile, right in this session.</p>
+    <div class="pick-grid" id="pickGrid">
+      <button type="button" class="pick-btn" data-pick="filePhoto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="m4.5 18 5-5 3 3 3.5-3.5 3.5 3.5"/></svg>Upload photo<span>From your device</span></button>
+      <button type="button" class="pick-btn" data-pick="filePhotoCam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>Take photo<span>Use your camera</span></button>
+      <button type="button" class="pick-btn" data-pick="fileVideo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10.5 9.8 5 2.7-5 2.7z"/></svg>Upload video<span>From your device</span></button>
+      <button type="button" class="pick-btn" data-pick="fileVideoCam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h7A2.5 2.5 0 0 1 15 8.5v7A2.5 2.5 0 0 1 12.5 18h-7A2.5 2.5 0 0 1 3 15.5z"/><path d="M15 10.5 21 7v10l-6-3.5"/></svg>Record video<span>Use your camera</span></button>
+    </div>
+    <input type="file" id="filePhoto" accept="image/*" hidden />
+    <input type="file" id="filePhotoCam" accept="image/*" capture="environment" hidden />
+    <input type="file" id="fileVideo" accept="video/*" hidden />
+    <input type="file" id="fileVideoCam" accept="video/*" capture="environment" hidden />
+    <div class="upload-preview" id="uploadPreview"></div>
+    <button type="button" class="pick-change" id="pickChange">Choose different media</button>
+    <div class="field">
+      <label for="uploadCaption">Caption</label>
+      <textarea id="uploadCaption" rows="2" placeholder="What's happening in this one?"></textarea>
+    </div>
+    <div class="field">
+      <label for="uploadTags">Tags</label>
+      <input type="text" id="uploadTags" placeholder="skate, sunset, firsttry" />
+    </div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn btn-ghost" data-close>Cancel</button>
+    <button class="btn btn-teal" id="uploadPost">Post</button>
+  </div>
+</section>
+
+<!-- ============ NEW CHAT SHEET ============ -->
+<section class="sheet" id="newChatSheet" aria-label="New chat">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><h2>New chat</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="sheet-body">
+    <p class="hint">Start a DM, or tap a few people to make a group — you can name the chat and set nicknames right after.</p>
+    <div id="peopleList"></div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn btn-ghost" data-close>Cancel</button>
+    <button class="btn btn-teal" id="startChatBtn">Start chat</button>
+  </div>
+</section>
+
+<!-- ============ EDIT PROFILE SHEET ============ -->
+<section class="sheet" id="profileSheet" aria-label="Edit profile">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><h2>Edit profile</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="sheet-body">
+    <div class="field"><label for="profName">Display name</label><input type="text" id="profName" value="Liam" /></div>
+    <div class="field"><label for="profBio">Bio</label><textarea id="profBio" rows="3">Making stuff and posting the process. Skate clips, desk builds, and whatever the group chat dares me to try.</textarea></div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn btn-ghost" data-close>Cancel</button>
+    <button class="btn btn-teal" id="profileSave">Save</button>
+  </div>
+</section>
+
+<!-- Floating UI -->
+<div class="menu" id="msgMenu"></div>
+<div class="react-pop" id="reactPop"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= DATA ================= */
+const ME = { name:"Liam", handle:"@hoopslimbo", color:"#0e7a6c", initial:"L" };
+const PEOPLE = {
+  maya:   { name:"Maya Chen",   handle:"@maya.makes",  color:"#7c5cd6", initial:"M" },
+  jordan: { name:"Jordan Blake",handle:"@jblake",      color:"#c2600e", initial:"J" },
+  priya:  { name:"Priya Nair",  handle:"@priya.png",   color:"#b03a6b", initial:"P" },
+  sam:    { name:"Sam Rivera",  handle:"@setup.sam",   color:"#2b6cb0", initial:"S" },
+  kai:    { name:"Kai Tanaka",  handle:"@kai.moves",   color:"#4c7a0e", initial:"K" },
+};
+
+const VIDEOS = [];
+
+
+
+let msgSeq = 100;
+function M(from, text, time, extra){ return Object.assign({ id:"m"+(++msgSeq), from, text, time, edited:false, reactions:{} }, extra||{}); }
+
+const CHATS = [];
+
+const WALLPAPERS = [
+  { id:"wp-none", name:"Plain" }, { id:"wp-teal", name:"Deep Teal" }, { id:"wp-sunset", name:"Sunset" },
+  { id:"wp-grid", name:"Grid" }, { id:"wp-dots", name:"Dots" }, { id:"wp-ocean", name:"Ocean" },
+];
+const QUICK_EMOJIS = ["❤️","😂","😮","😢","🔥","👍","🎉","👀"];
+
+/* ================= STATE ================= */
+const state = {
+  view:"feed", feedTab:"foryou",
+  liked:new Set(), saved:new Set(), following:new Set(),
+  activeChatId:null, editingMsgId:null, commentVideoId:null,
+  profileTab:"videos", myPosts:[], selectedPeople:new Set(),
+};
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+function fmt(n){ return n>=1000 ? (n/1000).toFixed(1).replace(/\.0$/,"")+"K" : ""+n; }
+function avatarHTML(person, size){ return `<span class="avatar ${size||"md"}" style="background:${person.color}">${person.initial}</span>`; }
+function personOf(key){ return key==="me" ? ME : PEOPLE[key]; }
+function displayName(chat, key){
+  if(key==="me") return "You";
+  const nick = (chat.nicknames||{})[key];
+  return nick || PEOPLE[key].name;
+}
+let toastTimer=null;
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"), 2400);
+}
+
+/* ================= NAV ================= */
+function switchView(v){
+  state.view=v;
+  $$(".view").forEach(el=>el.classList.remove("active"));
+  $("#view-"+v).classList.add("active");
+  $$("#sideNav .nav-item, #bottomNav [data-view]").forEach(b=>b.classList.toggle("active", b.dataset.view===v));
+  $$("#bottomNav [data-view]").forEach(b=>b.classList.toggle("on", b.dataset.view===v));
+  if(v==="feed") requestAnimationFrame(observeReels);
+}
+$$("[data-view]").forEach(b=>b.addEventListener("click", ()=>switchView(b.dataset.view)));
+$("#feedSearchBtn").addEventListener("click", ()=>switchView("discover"));
+
+/* ================= FEED ================= */
+const heartSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.7C6 16.6 3 13.2 3 9.6 3 7 5 5 7.4 5c1.7 0 3.4 1 4.6 2.7C13.2 6 14.9 5 16.6 5 19 5 21 7 21 9.6c0 3.6-3 7-9 11.1z"/></svg>';
+const commentSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg>';
+const shareSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5.5 20 12l-7 6.5v-4C7 14.5 4.5 16.5 3 19c0-6 3.5-9.5 10-10z"/><path d="M13 5.5V9"/></svg>';
+const bookmarkSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12V21l-6-4-6 4z"/></svg>';
+
+function visibleVideos(){
+  if(state.feedTab==="following") return VIDEOS.filter(v=>state.following.has(v.handle) || v.mine);
+  return VIDEOS;
+}
+function renderFeed(){
+  const feed=$("#feed"); feed.innerHTML="";
+  const list=visibleVideos();
+  $(".feed-nav-hint").style.display = list.length ? "" : "none";
+  if(!list.length){
+    const followingTab = state.feedTab==="following";
+    feed.innerHTML=`<div class="empty-state">
+      <div class="ring" aria-hidden="true"></div>
+      <b>Nothing here at the moment</b>
+      <p>${followingTab ? "Posts from people you follow will land right here." : "No posts yet. Be the first — share a photo or a video."}</p>
+      <button class="btn btn-teal" id="emptyPostBtn">Create a post</button>
+    </div>`;
+    $("#emptyPostBtn").addEventListener("click", openUpload);
+    return;
+  }
+  list.forEach(v=>{
+    const reel=document.createElement("div"); reel.className="reel"; reel.dataset.id=v.id;
+    const liked=state.liked.has(v.id), saved=state.saved.has(v.id), following=state.following.has(v.handle);
+    const isPhoto = !v.videoUrl;
+    reel.innerHTML=`
+      <div class="reel-card" data-card="${v.id}">
+        ${v.videoUrl ? `<video src="${v.videoUrl}" poster="${v.img||""}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loop muted playsinline></video>`
+                      : `<img class="poster" src="${v.img}" alt="Photo by ${v.author}: ${v.caption}" />`}
+        <div class="reel-shade"></div>
+        ${isPhoto ? "" : `<div class="paused-badge"><span><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg></span></div>`}
+        <div class="big-heart"><svg viewBox="0 0 24 24"><path d="M12 20.7C6 16.6 3 13.2 3 9.6 3 7 5 5 7.4 5c1.7 0 3.4 1 4.6 2.7C13.2 6 14.9 5 16.6 5 19 5 21 7 21 9.6c0 3.6-3 7-9 11.1z"/></svg></div>
+        <div class="reel-meta">
+          <div class="reel-author"><span>${v.handle}</span>${v.mine?"":`<button class="follow-chip ${following?"following":""}" data-follow="${v.handle}">${following?"Following":"Follow"}</button>`}</div>
+          <p class="reel-cap">${v.caption}</p>
+          <div class="reel-tags">${v.tags.map(t=>`<span>${t}</span>`).join("")}</div>
+        </div>
+        <div class="reel-rail">
+          <div class="rail-avatar">${avatarHTML(v,"md")}${v.mine?"":`<span class="plus ${following?"done":""}" data-follow="${v.handle}">${following?"✓":"+"}</span>`}</div>
+          <button class="rail-btn ${liked?"liked":""}" data-like="${v.id}"><span class="ic">${heartSVG}</span><span data-likecount="${v.id}">${fmt(v.likes + (liked?1:0))}</span></button>
+          <button class="rail-btn" data-comments="${v.id}"><span class="ic">${commentSVG}</span><span>${fmt(v.comments.length)}</span></button>
+          <button class="rail-btn ${saved?"saved":""}" data-save="${v.id}"><span class="ic">${bookmarkSVG}</span><span>${saved?"Saved":"Save"}</span></button>
+          <button class="rail-btn" data-share="${v.id}"><span class="ic">${shareSVG}</span><span>${v.shares}</span></button>
+        </div>
+        ${isPhoto ? "" : `<div class="reel-progress"><i></i></div>`}
+      </div>`;
+    feed.appendChild(reel);
+  });
+  bindFeedEvents(); observeReels();
+}
+function bindFeedEvents(){
+  $$("#feed [data-like]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); toggleLike(b.dataset.like); }));
+  $$("#feed [data-save]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); toggleSave(b.dataset.save); }));
+  $$("#feed [data-comments]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); openComments(b.dataset.comments); }));
+  $$("#feed [data-share]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); toast("Link copied — send it to whoever needs to see this"); }));
+  $$("#feed [data-follow]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); toggleFollow(b.dataset.follow); }));
+  $$("#feed .reel-card").forEach(card=>{
+    let lastTap=0;
+    card.addEventListener("click", e=>{
+      if(e.target.closest("button")) return;
+      const now=Date.now();
+      if(now-lastTap<320){ likeWithHeart(card.dataset.card, card, e); lastTap=0; }
+      else { lastTap=now; setTimeout(()=>{ if(lastTap && Date.now()-lastTap>=310) togglePlay(card); }, 320); }
+    });
+  });
+}
+function togglePlay(card){
+  const vid=card.querySelector("video");
+  const playing=card.classList.toggle("playing");
+  if(vid){ playing ? vid.play().catch(()=>{}) : vid.pause(); }
+}
+function likeWithHeart(id, card, e){
+  if(!state.liked.has(id)){ state.liked.add(id); syncLikeUI(id); }
+  const heart=card.querySelector(".big-heart");
+  const rect=card.getBoundingClientRect();
+  const x=(e.clientX? e.clientX-rect.left : rect.width/2)-46, y=(e.clientY? e.clientY-rect.top : rect.height/2)-46;
+  heart.style.left=x+"px"; heart.style.top=y+"px";
+  heart.classList.remove("pop"); void heart.offsetWidth; heart.classList.add("pop");
+}
+function toggleLike(id){
+  state.liked.has(id) ? state.liked.delete(id) : state.liked.add(id);
+  syncLikeUI(id);
+}
+function syncLikeUI(id){
+  const v=VIDEOS.find(x=>x.id===id); if(!v) return;
+  const liked=state.liked.has(id);
+  $$(`#feed [data-like="${id}"]`).forEach(b=>b.classList.toggle("liked", liked));
+  $$(`[data-likecount="${id}"]`).forEach(el=>el.textContent=fmt(v.likes + (liked?1:0)));
+  renderStats();
+  if(state.view==="profile") renderProfileGrid();
+}
+function toggleSave(id){
+  const on=!state.saved.has(id);
+  on ? state.saved.add(id) : state.saved.delete(id);
+  $$(`#feed [data-save="${id}"]`).forEach(b=>{ b.classList.toggle("saved", on); b.lastElementChild.textContent=on?"Saved":"Save"; });
+  toast(on?"Saved to your profile":"Removed from saved");
+}
+function toggleFollow(handle){
+  const on=!state.following.has(handle);
+  on ? state.following.add(handle) : state.following.delete(handle);
+  renderFeed(); renderStats();
+  toast(on?`Following ${handle}`:`Unfollowed ${handle}`);
+  if(state.view==="profile") renderProfileGrid();
+}
+let reelObserver=null;
+function observeReels(){
+  if(reelObserver) reelObserver.disconnect();
+  reelObserver=new IntersectionObserver(entries=>{
+    entries.forEach(en=>{
+      const card=en.target.querySelector(".reel-card"); if(!card) return;
+      const vid=card.querySelector("video");
+      if(en.intersectionRatio>=0.65){ card.classList.add("playing"); if(vid) vid.play().catch(()=>{}); }
+      else { card.classList.remove("playing"); if(vid) vid.pause(); }
+    });
+  }, { root:$("#feed"), threshold:[0.65] });
+  $$("#feed .reel").forEach(r=>reelObserver.observe(r));
+}
+function stepFeed(dir){
+  const feed=$("#feed"); const reels=$$("#feed .reel"); if(!reels.length) return;
+  const idx=reels.findIndex(r=>Math.abs(r.getBoundingClientRect().top - feed.getBoundingClientRect().top) < feed.clientHeight/2);
+  const next=Math.min(reels.length-1, Math.max(0, (idx<0?0:idx)+dir));
+  reels[next].scrollIntoView({behavior:"smooth"});
+}
+$("#feedDown").addEventListener("click", ()=>stepFeed(1));
+$("#feedUp").addEventListener("click", ()=>stepFeed(-1));
+document.addEventListener("keydown", e=>{
+  if(state.view!=="feed" || $("#scrim").classList.contains("show")) return;
+  if(e.key==="ArrowDown"){ e.preventDefault(); stepFeed(1); }
+  if(e.key==="ArrowUp"){ e.preventDefault(); stepFeed(-1); }
+});
+$$("[data-feedtab]").forEach(b=>b.addEventListener("click", ()=>{
+  $$("[data-feedtab]").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+  state.feedTab=b.dataset.feedtab; renderFeed(); $("#feed").scrollTop=0;
+}));
+
+/* ================= COMMENTS ================= */
+function openSheet(id){
+  $("#scrim").classList.add("show");
+  $$(".sheet").forEach(s=>s.classList.remove("show"));
+  $("#"+id).classList.add("show");
+}
+function closeSheets(){ $("#scrim").classList.remove("show"); $$(".sheet").forEach(s=>s.classList.remove("show")); hidePopups(); }
+$("#scrim").addEventListener("click", closeSheets);
+$$("[data-close]").forEach(b=>b.addEventListener("click", closeSheets));
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeSheets(); hidePopups(); } });
+
+function openComments(id){
+  state.commentVideoId=id;
+  const v=VIDEOS.find(x=>x.id===id);
+  $("#commentsTitle").textContent= v.comments.length ? `Comments · ${fmt(v.comments.length)}` : "Comments";
+  renderComments(); openSheet("commentsSheet");
+  setTimeout(()=>$("#commentInput").focus(), 80);
+}
+function renderComments(){
+  const v=VIDEOS.find(x=>x.id===state.commentVideoId);
+  const list=$("#commentList"); list.innerHTML="";
+  if(!v.comments.length){
+    list.innerHTML='<p class="empty-note" style="text-align:center; padding:18px 0;">No comments yet — be the first to say something.</p>';
+    return;
+  }
+  v.comments.forEach((c,i)=>{
+    const p=personOf(c.who);
+    const row=document.createElement("div"); row.className="comment";
+    row.innerHTML=`${avatarHTML(p,"sm")}<div class="c-main"><b>${p.handle}</b><p></p><span>${c.time} ago</span></div>
+      <button class="c-like ${c.likedByMe?"liked":""}" data-clike="${i}">${heartSVG}<span>${fmt(c.likes + (c.likedByMe?1:0))}</span></button>`;
+    row.querySelector("p").textContent=c.text;
+    list.appendChild(row);
+  });
+  $$("#commentList [data-clike]").forEach(b=>b.addEventListener("click", ()=>{
+    const c=v.comments[+b.dataset.clike]; c.likedByMe=!c.likedByMe; renderComments();
+  }));
+}
+$("#commentForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const input=$("#commentInput"); const text=input.value.trim(); if(!text) return;
+  const v=VIDEOS.find(x=>x.id===state.commentVideoId);
+  v.comments.push({who:"me", text, likes:0, time:"now"});
+  $("#commentsTitle").textContent=`Comments · ${fmt(v.comments.length)}`;
+  input.value=""; autoGrow(input); renderComments();
+  $("#commentList").scrollTop=1e6;
+  toast("Comment posted");
+});
+
+/* ================= DISCOVER ================= */
+function thumbMedia(v, alt){
+  return v.videoUrl
+    ? `<video src="${v.videoUrl}" muted playsinline preload="metadata" aria-label="${alt}"></video>`
+    : `<img src="${v.img}" alt="${alt}" loading="lazy" />`;
+}
+function renderThumbs(list){
+  const grid=$("#thumbGrid"); grid.innerHTML="";
+  list.forEach(v=>{
+    const b=document.createElement("button"); b.className="thumb"; b.dataset.thumb=v.id;
+    b.innerHTML=`${thumbMedia(v, "Post by "+v.author)}<div class="t-meta"><b></b><span>${heartSVG}${fmt(v.likes)}</span></div>`;
+    b.querySelector("b").textContent=v.caption;
+    b.addEventListener("click", ()=>{ switchView("feed"); state.feedTab="foryou"; $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou")); renderFeed();
+      requestAnimationFrame(()=>{ const el=$(`#feed .reel[data-id="${v.id}"]`); if(el) el.scrollIntoView(); }); });
+    grid.appendChild(b);
+  });
+  const empty=$("#discoverEmpty");
+  empty.style.display=list.length? "none":"block";
+  if(!list.length){
+    const q=$("#discoverSearch").value.trim();
+    empty.textContent = q ? "Nothing matches that search." : "Nothing here at the moment.";
+  }
+}
+function filterDiscover(){
+  const q=$("#discoverSearch").value.trim().toLowerCase();
+  if(!q){ renderThumbs(VIDEOS); return; }
+  renderThumbs(VIDEOS.filter(v=> v.caption.toLowerCase().includes(q) || v.author.toLowerCase().includes(q) || v.handle.toLowerCase().includes(q) || v.tags.some(t=>t.toLowerCase().includes(q))));
+}
+$("#discoverSearch").addEventListener("input", filterDiscover);
+
+/* ================= PROFILE ================= */
+function renderStats(){
+  $("#statFollowing").textContent=fmt(state.following.size);
+  $("#statFollowers").textContent="0";
+  $("#statLikes").textContent=fmt(state.myPosts.reduce((sum,v)=>sum + v.likes + (state.liked.has(v.id)?1:0), 0));
+}
+function renderProfileGrid(){
+  const grid=$("#profileGrid"); grid.innerHTML="";
+  const list = state.profileTab==="videos" ? state.myPosts : VIDEOS.filter(v=>state.liked.has(v.id));
+  const empty=$("#profileEmpty");
+  empty.style.display = list.length? "none":"block";
+  if(!list.length){
+    empty.textContent = state.profileTab==="videos"
+      ? "Nothing here at the moment — your posts will live here once you add one."
+      : "Nothing here at the moment — posts you like will show up here.";
+  }
+  list.forEach(v=>{
+    const b=document.createElement("button"); b.className="thumb";
+    b.innerHTML=`${thumbMedia(v, "Post: "+v.caption)}<div class="t-meta"><b></b><span>${heartSVG}${fmt(v.likes)}</span></div>`;
+    b.querySelector("b").textContent=v.caption;
+    b.addEventListener("click", ()=>{ switchView("feed"); state.feedTab="foryou"; $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou")); renderFeed();
+      requestAnimationFrame(()=>{ const el=$(`#feed .reel[data-id="${v.id}"]`); if(el) el.scrollIntoView(); }); });
+    grid.appendChild(b);
+  });
+}
+$$("[data-ptab]").forEach(b=>b.addEventListener("click", ()=>{
+  $$("[data-ptab]").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+  state.profileTab=b.dataset.ptab; renderProfileGrid();
+}));
+$("#editProfileBtn").addEventListener("click", ()=>openSheet("profileSheet"));
+$("#profileSave").addEventListener("click", ()=>{
+  const name=$("#profName").value.trim()||"Liam";
+  document.querySelector(".profile-id h1").firstChild.textContent=name+" ";
+  $(".profile-bio").textContent=$("#profBio").value.trim();
+  closeSheets(); toast("Profile updated");
+});
+
+/* ================= CREATE POST ================= */
+let uploadURL=null, uploadType=null;
+function openUpload(){ openSheet("uploadSheet"); }
+$("#sideUpload").addEventListener("click", openUpload);
+$("#mobileUpload").addEventListener("click", openUpload);
+$("#profileUpload").addEventListener("click", openUpload);
+$$("[data-pick]").forEach(b=>b.addEventListener("click", ()=>{ $("#"+b.dataset.pick).click(); }));
+["filePhoto","filePhotoCam","fileVideo","fileVideoCam"].forEach(id=>{
+  $("#"+id).addEventListener("change", e=>{
+    const f=e.target.files[0]; e.target.value="";
+    if(!f) return;
+    if(uploadURL) URL.revokeObjectURL(uploadURL);
+    uploadURL=URL.createObjectURL(f);
+    uploadType=f.type.startsWith("video") ? "video" : "photo";
+    const prev=$("#uploadPreview"); prev.classList.add("show");
+    prev.innerHTML= uploadType==="video"
+      ? `<video src="${uploadURL}" autoplay muted loop playsinline></video>`
+      : `<img src="${uploadURL}" alt="Your post preview" />`;
+    $("#pickGrid").style.display="none";
+    $("#pickChange").classList.add("show");
+  });
+});
+function resetUploadPicker(){
+  if(uploadURL) URL.revokeObjectURL(uploadURL);
+  uploadURL=null; uploadType=null;
+  const prev=$("#uploadPreview"); prev.classList.remove("show"); prev.innerHTML="";
+  $("#pickGrid").style.display="grid";
+  $("#pickChange").classList.remove("show");
+}
+$("#pickChange").addEventListener("click", resetUploadPicker);
+$("#uploadPost").addEventListener("click", ()=>{
+  if(!uploadURL || !uploadType){ toast("Pick a photo or video first"); return; }
+  const caption=$("#uploadCaption").value.trim() || "Fresh off the camera roll.";
+  const tags=$("#uploadTags").value.split(",").map(t=>t.trim()).filter(Boolean).map(t=>t.startsWith("#")?t:"#"+t.replace(/\s+/g,""));
+  const v={ id:"mine"+Date.now(), type:uploadType, img: uploadType==="photo"? uploadURL : "", videoUrl: uploadType==="video"? uploadURL : null,
+    author:"Liam", handle:"@hoopslimbo", color:"#0e7a6c", initial:"L", mine:true,
+    caption, tags: tags.length? tags : ["#myreelio"], likes:0, comments:[], shares:"0" };
+  VIDEOS.unshift(v); state.myPosts.unshift(v);
+  uploadURL=null; uploadType=null;
+  const prev=$("#uploadPreview"); prev.classList.remove("show"); prev.innerHTML="";
+  $("#pickGrid").style.display="grid"; $("#pickChange").classList.remove("show");
+  $("#uploadCaption").value=""; $("#uploadTags").value="";
+  closeSheets(); switchView("feed"); state.feedTab="foryou";
+  $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou"));
+  renderFeed(); $("#feed").scrollTop=0; renderProfileGrid(); renderStats(); renderThumbs(VIDEOS);
+  toast("Posted — it's at the top of your feed");
+});
+
+/* ================= INBOX / CHATS ================= */
+function activeChat(){ return CHATS.find(c=>c.id===state.activeChatId); }
+function lastMsg(chat){ return chat.messages[chat.messages.length-1]; }
+function chatPreview(chat){
+  const m=lastMsg(chat); if(!m) return "Say hi 👋";
+  const who = m.from==="me" ? "You" : displayName(chat, m.from);
+  return `${who}: ${m.text}`;
+}
+function chatAvatarHTML(chat, size){
+  if(chat.type==="dm"){ return avatarHTML(PEOPLE[chat.members[0]], size); }
+  return `<span class="avatar-wrap">${avatarHTML({color:"#0b7a6e", initial:chat.name.split(" ").map(w=>w[0]).slice(0,2).join("")}, size)}<span class="group-badge"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="10" r="2.4"/><path d="M3.5 19c.8-3 3-4.2 5.5-4.2S13.7 16 14.5 19zM14.8 15.4c2.3.2 4 1.3 4.7 3.6h-3.4c-.3-1.5-.8-2.7-1.3-3.6z"/></svg></span></span>`;
+}
+function renderChatList(){
+  const q=($("#chatSearch").value||"").toLowerCase();
+  const box=$("#chatItems"); box.innerHTML="";
+  CHATS.filter(c=>c.name.toLowerCase().includes(q) || chatPreview(c).toLowerCase().includes(q)).forEach(chat=>{
+    const m=lastMsg(chat);
+    const item=document.createElement("button"); item.className="chat-item"+(chat.id===state.activeChatId?" active":"");
+    item.innerHTML=`${chatAvatarHTML(chat,"md")}<div class="ci-main"><div class="ci-top"><b></b><time>${m? m.time:""}</time></div><div class="ci-sub"></div></div>${chat.unread?`<span class="unread">${chat.unread}</span>`:""}`;
+    item.querySelector("b").textContent=chat.name;
+    item.querySelector(".ci-sub").textContent=chatPreview(chat);
+    item.addEventListener("click", ()=>openChat(chat.id));
+    box.appendChild(item);
+  });
+  if(!box.children.length){
+    const note=document.createElement("p"); note.className="empty-note"; note.style.padding="16px 12px";
+    note.textContent = q ? "No chats match that search." : "Nothing here at the moment — tap the pencil up top to start a chat.";
+    box.appendChild(note);
+  }
+  const total=CHATS.reduce((s,c)=>s+c.unread,0);
+  ["#sideUnread","#mobileUnread"].forEach(sel=>{ const el=$(sel); el.textContent=total; el.style.display=total? "flex":"none"; });
+}
+$("#chatSearch").addEventListener("input", renderChatList);
+
+function openChat(id){
+  state.activeChatId=id; state.editingMsgId=null;
+  const chat=activeChat(); chat.unread=0;
+  $("#threadEmpty").style.display="none";
+  const live=$("#threadLive"); live.style.display="flex";
+  $("#inboxWrap").classList.add("thread-open");
+  $("#threadAvatar").innerHTML=chatAvatarHTML(chat,"md");
+  renderThreadHead(); renderMessages(); renderChatList();
+  setTimeout(()=>$("#composerInput").focus(), 60);
+}
+$("#threadBack").addEventListener("click", ()=>{
+  $("#inboxWrap").classList.remove("thread-open"); state.activeChatId=null;
+  $("#threadLive").style.display="none"; $("#threadEmpty").style.display="flex"; renderChatList();
+});
+function renderThreadHead(){
+  const chat=activeChat(); if(!chat) return;
+  $("#threadName").textContent=chat.name;
+  $("#threadSub").textContent= chat.type==="dm"
+    ? `${displayName(chat, chat.members[0])} · ${PEOPLE[chat.members[0]].handle}`
+    : `${chat.members.length+1} people · ${chat.members.map(k=>displayName(chat,k)).join(", ")}, You`;
+}
+function renderMessages(){
+  const chat=activeChat(); if(!chat) return;
+  const box=$("#threadMsgs");
+  box.className="thread-msgs "+chat.wallpaper;
+  box.innerHTML=`<div class="day-chip">Today</div>`;
+  let lastFrom=null;
+  chat.messages.forEach(m=>{
+    const person=personOf(m.from);
+    const row=document.createElement("div");
+    row.className="msg-row "+(m.from==="me"?"me":"them"); row.dataset.msg=m.id;
+    const showName = chat.type==="group" && m.from!=="me" && lastFrom!==m.from;
+    const reactionHTML = Object.keys(m.reactions).length ? `<div class="reactions">${Object.entries(m.reactions).map(([emoji,who])=>{
+        const mine=who.includes("Liam")||who.includes("You");
+        return `<button class="reaction-chip ${mine?"mine":""}" data-react-chip="${m.id}|${emoji}">${emoji}${who.length>1?`<small>${who.length}</small>`:""}</button>`;
+      }).join("")}</div>` : "";
+    row.innerHTML=`
+      ${m.from!=="me" ? avatarHTML(person,"sm") : ""}
+      <div class="msg-stack">
+        ${showName?`<div class="sender-name">${displayName(chat, m.from)}</div>`:""}
+        <div class="bubble"><span class="bubble-text"></span>${m.edited?'<span class="edited-tag">edited</span>':""}</div>
+        ${reactionHTML}
+        <div class="msg-meta"><span>${m.time}</span></div>
+      </div>
+      <div class="msg-actions">
+        <button data-act="react" data-id="${m.id}" aria-label="React"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.2 1.8 3.5 1.8 3.5-1.8 3.5-1.8"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="3"/></svg></button>
+        <button data-act="menu" data-id="${m.id}" aria-label="Message options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+      </div>`;
+    row.querySelector(".bubble-text").textContent=m.text;
+    box.appendChild(row);
+    lastFrom=m.from;
+  });
+  // wire actions
+  box.querySelectorAll("[data-act]").forEach(b=>b.addEventListener("click", e=>{
+    e.stopPropagation();
+    const id=b.dataset.id;
+    if(b.dataset.act==="react") showReactPop(id, b);
+    else showMsgMenu(id, b);
+  }));
+  box.querySelectorAll("[data-react-chip]").forEach(b=>b.addEventListener("click", ()=>{
+    const [mid, emoji]=b.dataset.reactChip.split("|"); toggleReaction(mid, emoji);
+  }));
+  // double-tap / double-click to heart
+  box.querySelectorAll(".bubble").forEach(bub=>{
+    let lastTap=0;
+    bub.addEventListener("click", ()=>{
+      const now=Date.now();
+      if(now-lastTap<330){ const row=bub.closest(".msg-row"); toggleReaction(row.dataset.msg, "❤️", true); lastTap=0; }
+      else lastTap=now;
+    });
+  });
+  box.scrollTop=box.scrollHeight;
+}
+function findMsg(id){ const chat=activeChat(); return chat.messages.find(m=>m.id===id); }
+function toggleReaction(msgId, emoji, onlyAdd){
+  const m=findMsg(msgId); if(!m) return;
+  m.reactions[emoji]=m.reactions[emoji]||[];
+  const i=m.reactions[emoji].indexOf("Liam");
+  if(i>=0){ if(!onlyAdd){ m.reactions[emoji].splice(i,1); if(!m.reactions[emoji].length) delete m.reactions[emoji]; } }
+  else m.reactions[emoji].push("Liam");
+  hidePopups(); renderMessages();
+}
+
+/* --- reaction popup --- */
+let popMsgId=null;
+function showReactPop(msgId, anchor){
+  popMsgId=msgId;
+  const pop=$("#reactPop");
+  pop.innerHTML=QUICK_EMOJIS.map(e=>`<button data-emoji="${e}">${e}</button>`).join("")+
+    `<span class="any-emoji"><input id="anyEmoji" maxlength="4" placeholder="any…" aria-label="Type any emoji" /><button data-emoji-go style="font-size:14px; width:auto; padding:0 8px; font-weight:800; color:var(--teal);">Add</button></span>`;
+  const r=anchor.getBoundingClientRect();
+  pop.classList.add("show");
+  pop.style.left=Math.max(8, Math.min(r.left-60, innerWidth-pop.offsetWidth-10))+"px";
+  pop.style.top=Math.max(8, r.top-pop.offsetHeight-8)+"px";
+  pop.querySelectorAll("[data-emoji]").forEach(b=>b.addEventListener("click", ()=>toggleReaction(popMsgId, b.dataset.emoji)));
+  pop.querySelector("[data-emoji-go]").addEventListener("click", ()=>{
+    const val=pop.querySelector("#anyEmoji").value.trim(); if(val) toggleReaction(popMsgId, val);
+  });
+  pop.querySelector("#anyEmoji").addEventListener("keydown", e=>{
+    if(e.key==="Enter"){ e.preventDefault(); const val=e.target.value.trim(); if(val) toggleReaction(popMsgId, val); }
+  });
+}
+/* --- message menu --- */
+function showMsgMenu(msgId, anchor){
+  const m=findMsg(msgId); if(!m) return;
+  const menu=$("#msgMenu");
+  const pencil='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+  const trash='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13"/></svg>';
+  const smile='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.2 1.8 3.5 1.8 3.5-1.8 3.5-1.8"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="3"/></svg>';
+  const copy='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+  menu.innerHTML=`
+    <button data-menu="react">${smile}React</button>
+    <button data-menu="copy">${copy}Copy text</button>
+    ${m.from==="me"?`<button data-menu="edit">${pencil}Edit message</button><button data-menu="delete" class="danger">${trash}Delete message</button>`:""}`;
+  const r=anchor.getBoundingClientRect();
+  menu.classList.add("show");
+  menu.style.left=Math.max(8, Math.min(r.left-140, innerWidth-menu.offsetWidth-10))+"px";
+  menu.style.top=Math.min(r.bottom+6, innerHeight-menu.offsetHeight-10)+"px";
+  menu.querySelectorAll("[data-menu]").forEach(b=>b.addEventListener("click", ()=>{
+    const act=b.dataset.menu; hidePopups();
+    if(act==="react") showReactPop(msgId, anchor);
+    if(act==="copy"){ navigator.clipboard && navigator.clipboard.writeText(m.text).catch(()=>{}); toast("Copied"); }
+    if(act==="edit") startEdit(msgId);
+    if(act==="delete") deleteMsg(msgId);
+  }));
+}
+function hidePopups(){ $("#msgMenu").classList.remove("show"); $("#reactPop").classList.remove("show"); }
+document.addEventListener("click", e=>{
+  if(!e.target.closest("#msgMenu") && !e.target.closest("#reactPop") && !e.target.closest("[data-act]")) hidePopups();
+});
+function startEdit(msgId){
+  const m=findMsg(msgId); if(!m) return;
+  state.editingMsgId=msgId;
+  $("#editBanner").classList.add("show");
+  $("#editBannerText").textContent=m.text;
+  const input=$("#composerInput"); input.value=m.text; autoGrow(input); input.focus();
+}
+$("#editCancel").addEventListener("click", cancelEdit);
+function cancelEdit(){
+  state.editingMsgId=null; $("#editBanner").classList.remove("show");
+  const input=$("#composerInput"); input.value=""; autoGrow(input);
+}
+function deleteMsg(msgId){
+  const chat=activeChat();
+  chat.messages=chat.messages.filter(m=>m.id!==msgId);
+  renderMessages(); renderChatList(); toast("Message deleted");
+}
+
+/* --- composer --- */
+function autoGrow(el){ el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,110)+"px"; }
+$("#composerInput").addEventListener("input", e=>autoGrow(e.target));
+$("#composerInput").addEventListener("keydown", e=>{
+  if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); $("#composer").requestSubmit(); }
+});
+
+$("#composer").addEventListener("submit", e=>{
+  e.preventDefault();
+  const chat=activeChat(); if(!chat) return;
+  const input=$("#composerInput"); const text=input.value.trim(); if(!text) return;
+  if(state.editingMsgId){
+    const m=findMsg(state.editingMsgId); m.text=text; m.edited=true;
+    cancelEdit(); renderMessages(); renderChatList(); toast("Message edited"); return;
+  }
+  chat.messages.push(M("me", text, "Now"));
+  input.value=""; autoGrow(input); renderMessages(); renderChatList();
+});
+$("#emojiBtn").addEventListener("click", ()=>{
+  const input=$("#composerInput"); input.value+="😀"; autoGrow(input); input.focus();
+});
+
+/* --- customize chat --- */
+function openCustomize(){
+  const chat=activeChat(); if(!chat) return;
+  $("#chatNameInput").value=chat.name;
+  const list=$("#nickList"); list.innerHTML="";
+  const allKeys=["me", ...chat.members];
+  allKeys.forEach(key=>{
+    const p=personOf(key);
+    const row=document.createElement("div"); row.className="nick-row";
+    row.innerHTML=`${avatarHTML(p,"sm")}<div class="who"><b>${p.name}</b><span>${p.handle}</span></div>`;
+    const inp=document.createElement("input"); inp.type="text"; inp.placeholder=p.name; inp.dataset.nick=key;
+    inp.value=(chat.nicknames||{})[key]||"";
+    row.appendChild(inp); list.appendChild(row);
+  });
+  const grid=$("#wpGrid"); grid.innerHTML="";
+  WALLPAPERS.forEach(w=>{
+    const b=document.createElement("button"); b.className="wp-swatch "+w.id+(chat.wallpaper===w.id?" on":"");
+    b.innerHTML=`<span>${w.name}</span>`; b.dataset.wp=w.id;
+    b.addEventListener("click", ()=>{ grid.querySelectorAll(".wp-swatch").forEach(x=>x.classList.remove("on")); b.classList.add("on"); });
+    grid.appendChild(b);
+  });
+  openSheet("customizeSheet");
+}
+$("#customizeBtn").addEventListener("click", openCustomize);
+$("#threadTitleBtn").addEventListener("click", openCustomize);
+$("#customizeSave").addEventListener("click", ()=>{
+  const chat=activeChat(); if(!chat) return;
+  const newName=$("#chatNameInput").value.trim(); if(newName) chat.name=newName;
+  chat.nicknames=chat.nicknames||{};
+  $$("#nickList [data-nick]").forEach(inp=>{
+    const val=inp.value.trim();
+    if(val) chat.nicknames[inp.dataset.nick]=val; else delete chat.nicknames[inp.dataset.nick];
+  });
+  const wp=$("#wpGrid .wp-swatch.on"); if(wp) chat.wallpaper=wp.dataset.wp;
+  closeSheets(); renderThreadHead(); renderMessages(); renderChatList();
+  toast("Chat updated — name, nicknames & wallpaper saved");
+});
+
+/* --- new chat --- */
+function openNewChat(){
+  state.selectedPeople.clear();
+  const list=$("#peopleList"); list.innerHTML="";
+  Object.entries(PEOPLE).forEach(([key,p])=>{
+    const row=document.createElement("div"); row.className="nick-row";
+    row.innerHTML=`${avatarHTML(p,"sm")}<div class="who"><b>${p.name}</b><span>${p.handle}</span></div>`;
+    const pick=document.createElement("button"); pick.className="btn btn-ghost"; pick.style.padding="7px 14px"; pick.style.fontSize="13.5px"; pick.textContent="Add";
+    pick.addEventListener("click", ()=>{
+      if(state.selectedPeople.has(key)){ state.selectedPeople.delete(key); pick.textContent="Add"; pick.classList.remove("btn-teal"); pick.classList.add("btn-ghost"); }
+      else { state.selectedPeople.add(key); pick.textContent="Added ✓"; pick.classList.add("btn-teal"); pick.classList.remove("btn-ghost"); }
+    });
+    row.appendChild(pick); list.appendChild(row);
+  });
+  openSheet("newChatSheet");
+}
+$("#newChatBtn").addEventListener("click", openNewChat);
+$("#startChatBtn").addEventListener("click", ()=>{
+  if(!state.selectedPeople.size){ toast("Pick at least one person first"); return; }
+  const members=Array.from(state.selectedPeople);
+  const chat={ id:"c"+Date.now(), type: members.length>1? "group":"dm",
+    name: members.length>1? "New Group" : PEOPLE[members[0]].name,
+    wallpaper:"wp-none", unread:0, members, nicknames:{},
+    messages:[] };
+  CHATS.unshift(chat); closeSheets(); switchView("inbox"); renderChatList(); openChat(chat.id);
+  if(chat.type==="group") setTimeout(openCustomize, 350);
+});
+
+/* ================= INIT ================= */
+renderFeed(); renderThumbs(VIDEOS); renderProfileGrid(); renderStats(); renderChatList();
+</script>
+</body>
+</html>
