@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.5.0" />
+<meta name="app-version" content="1.5.1" />
 <title>Reelio</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -135,21 +135,22 @@
   .view.active{display:flex; flex-direction:column;}
 
   /* ---------- Feed ---------- */
-  .feed-top{position:absolute; top:0; left:0; right:0; z-index:30; display:flex; align-items:center; justify-content:center; gap:26px; padding:calc(14px + env(safe-area-inset-top)) 16px 26px; background:linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0)); pointer-events:none;}
+  .feed-top{position:absolute; top:0; left:0; right:0; z-index:30; display:flex; align-items:center; justify-content:center; gap:26px; padding:calc(14px + env(safe-area-inset-top)) 16px 26px; background:linear-gradient(to bottom, rgba(0,0,0,.16), rgba(0,0,0,0) 78%); pointer-events:none;}
   .feed-top button{pointer-events:auto; font-size:16.5px; font-weight:700; color:rgba(255,255,255,.65); padding:4px 2px; position:relative; text-shadow:0 1px 8px rgba(0,0,0,.5);}
   .feed-top button.on{color:#fff;}
   .feed-top button.on::after{content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:-5px; width:26px; height:3px; border-radius:2px; background:var(--teal-bright);}
   .feed-search{position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:auto; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff;}
   .feed-search svg{width:24px; height:24px; filter:drop-shadow(0 1px 6px rgba(0,0,0,.6));}
-  .feed{flex:1; overflow-y:auto; overflow-x:hidden; width:100%; max-width:100%; scroll-snap-type:y mandatory; scrollbar-width:none; background:#000;}
+  #view-feed{position:relative;}
+  .feed{position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; width:100%; max-width:100%; scroll-snap-type:y mandatory; scrollbar-width:none; background:#000;}
   .feed::-webkit-scrollbar{display:none;}
   .reel{height:100%; scroll-snap-align:start; scroll-snap-stop:always; display:flex; align-items:center; justify-content:center; padding:18px 0;}
   .reel-card{position:relative; height:100%; max-height:100%; aspect-ratio:9/16; max-width:min(430px, 94vw); border-radius:18px; overflow:hidden; background:#111; box-shadow:0 24px 70px rgba(0,0,0,.55); flex:none;}
   @media (max-width:760px){
     .reel{padding:0; width:100%; max-width:100%; overflow:hidden;}
     .reel-card{max-width:100%; width:100%; height:100%; max-height:none; aspect-ratio:auto; border-radius:0; box-shadow:none;}
-    .reel-meta{bottom:calc(86px + env(safe-area-inset-bottom));}
-    .reel-rail{bottom:calc(112px + env(safe-area-inset-bottom));}
+    .reel-meta{bottom:calc(94px + env(safe-area-inset-bottom));}
+    .reel-rail{bottom:calc(208px + env(safe-area-inset-bottom));}
     .reel-progress{bottom:calc(66px + env(safe-area-inset-bottom));}
     .view{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
     #view-feed{padding-bottom:0;}
@@ -158,7 +159,7 @@
   .reel-card.playing img.poster{animation:kenburns 16s ease-in-out infinite alternate;}
   @keyframes kenburns{from{transform:scale(1) translateY(0);} to{transform:scale(1.09) translateY(-1.5%);}}
   @media (prefers-reduced-motion: reduce){ .reel-card.playing img.poster{animation:none;} }
-  .reel-shade{position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.18) 34%, rgba(0,0,0,0) 55%, rgba(0,0,0,.28) 100%); pointer-events:none;}
+  .reel-shade{position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.18) 34%, rgba(0,0,0,0) 55%); pointer-events:none;}
   .reel-meta{position:absolute; left:14px; right:78px; bottom:20px; color:#fff; z-index:5;}
   .reel-author{display:flex; align-items:center; gap:9px; font-weight:800; font-size:16.5px; text-shadow:0 1px 6px rgba(0,0,0,.55);}
   .follow-chip{font-size:12.5px; font-weight:700; border:1.5px solid var(--teal-bright); color:var(--teal-bright); border-radius:7px; padding:3px 9px; background:rgba(0,0,0,.25);}
@@ -167,7 +168,7 @@
   .reel-cap .htag{color:var(--teal-bright); font-weight:700;}
   .reel-tags{margin-top:6px; font-size:13.5px; font-weight:700; color:#dffcf6; text-shadow:0 1px 6px rgba(0,0,0,.6);}
   .reel-tags span{margin-right:9px;}
-  .reel-rail{position:absolute; right:10px; bottom:96px; z-index:6; display:flex; flex-direction:column; align-items:center; gap:15px;}
+  .reel-rail{position:absolute; right:10px; bottom:190px; z-index:6; display:flex; flex-direction:column; align-items:center; gap:15px;}
   .rail-btn{display:flex; flex-direction:column; align-items:center; gap:3px; color:#fff; font-size:12px; font-weight:700; text-shadow:0 1px 5px rgba(0,0,0,.5);}
   .rail-btn .ic{width:47px; height:47px; border-radius:50%; background:rgba(18,18,20,.42); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; transition:transform .12s, background .15s;}
   .rail-btn:active .ic{transform:scale(.9);}
@@ -525,14 +526,18 @@
   .update-status.ok{color:var(--teal);}
   .version-line{font-size:12px; color:var(--text-3); padding:10px 2px 0;}
 
-  /* ---------- Sound controls on reels ---------- */
-  .mute-btn{position:absolute; top:calc(94px + env(safe-area-inset-top)); right:12px; z-index:8; width:38px; height:38px; border-radius:50%; background:rgba(18,18,20,.45); backdrop-filter:blur(6px); color:#fff; display:flex; align-items:center; justify-content:center;}
-  .mute-btn svg{width:20px; height:20px;}
-  .mute-btn:active{transform:scale(.92);}
-  .tap-sound{display:none; position:absolute; top:calc(94px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:8; align-items:center; gap:7px; background:rgba(10,10,12,.72); backdrop-filter:blur(6px); color:#fff; font-size:13px; font-weight:700; border-radius:999px; padding:8px 14px 8px 11px; border:1px solid rgba(255,255,255,.25);}
-  .tap-sound svg{width:16px; height:16px;}
-  .reel-card.wants-sound .tap-sound{display:flex;}
-  .reel-card.wants-sound .mute-btn{display:none;}
+  /* ---------- Profile top bar / edit pencil / expanded comments sheet ---------- */
+  .profile-topbar{display:flex; align-items:center; margin:-6px 0 10px -8px;}
+  .profile-gear{width:42px; height:42px;}
+  .profile-gear svg{width:23px; height:23px;}
+  .profile-ava-wrap{position:relative; flex:none; display:inline-flex;}
+  .pencil-btn{position:absolute; right:0; bottom:0; width:31px; height:31px; border-radius:50%; background:var(--teal); color:#032723; display:flex; align-items:center; justify-content:center; border:2.5px solid var(--bg); box-shadow:0 2px 8px rgba(0,0,0,.35); z-index:2;}
+  .pencil-btn svg{width:15px; height:15px;}
+  .pencil-btn:active{transform:scale(.92);}
+  @media (max-width:760px){
+    .sheet{transition:transform .18s ease;}
+    .sheet.expanded{top:0; height:100dvh; max-height:100dvh; border-radius:0;}
+  }
 
   /* ---------- Audio on reels ---------- */
   .reel-audio{display:flex; align-items:center; gap:7px; margin-top:8px; color:#fff; font-size:13.5px; font-weight:600; padding:2px 0; max-width:100%; text-align:left; text-shadow:0 1px 6px rgba(0,0,0,.6);}
@@ -733,8 +738,11 @@
     <section class="view" id="view-profile">
       <div class="profile-scroll">
         <div class="profile-inner">
+          <div class="profile-topbar">
+            <button class="icon-btn profile-gear" id="settingsBtn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.64 8.9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09c0 .68.4 1.3 1 1.55.61.26 1.32.1 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01c.26.6.87 1 1.55 1H21a2 2 0 1 1 0 4h-.09c-.68 0-1.3.4-1.51 1z"/></svg></button>
+          </div>
           <div class="profile-top">
-            <span id="profileAvatar"></span>
+            <span class="profile-ava-wrap"><span id="profileAvatar"></span><button class="pencil-btn" id="editProfileBtn" aria-label="Edit profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button></span>
             <div class="profile-id">
               <h1><span id="profileName">…</span></h1>
               <div class="handle" id="profileHandle"></div>
@@ -748,9 +756,6 @@
           <p class="profile-bio" id="profileBio"></p>
           <div class="profile-actions">
             <button class="btn btn-teal" id="profileUpload">Create a post</button>
-            <button class="btn btn-ghost" id="editProfileBtn">Edit profile</button>
-            <button class="btn btn-ghost" id="settingsBtn">Settings</button>
-            <button class="btn btn-ghost" id="signOutBtn">Sign out</button>
           </div>
           <div class="profile-tabs">
             <button class="on" data-ptab="videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>Videos</button>
@@ -1234,10 +1239,10 @@ function renderIdentity(){
   $("#profileBio").style.display = ME.bio ? "" : "none";
   $("#commentAvatar").innerHTML = avatarHTML(me, "sm");
 }
-$("#signOutBtn").addEventListener("click", async ()=>{
+async function doSignOut(){
   await sb.auth.signOut();
   location.reload();
-});
+}
 
 /* ================= NAV ================= */
 function switchView(v){
@@ -1263,26 +1268,25 @@ const pinSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 const dotsSVG = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>';
 const heartMiniSVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.7C6 16.6 3 13.2 3 9.6 3 7 5 5 7.4 5c1.7 0 3.4 1 4.6 2.7C13.2 6 14.9 5 16.6 5 19 5 21 7 21 9.6c0 3.6-3 7-9 11.1z"/></svg>';
 
-/* Sound: videos try to play WITH sound. Browsers block unmuted autoplay
-   until the first tap, so a rejected play() falls back to muted and the
-   card shows a "Tap for sound" pill; the speaker button toggles sound
-   globally for the session. */
-let soundOn = true;
+/* Sound is simply ON — videos always play with their sound and there is
+   no mute toggle anywhere. Browsers still block unmuted autoplay until
+   the first tap anywhere on the page, so a blocked first play falls back
+   to muted for that one play; the first pointerdown unlocks sound on
+   whatever is currently playing. */
 function applyCardSound(card){
   const vid=card.querySelector("video"), track=card.querySelector("audio[data-track]");
-  if(track){ if(vid) vid.muted=true; track.muted=!soundOn; }
-  else if(vid){ vid.muted=!soundOn; }
+  if(track){ if(vid) vid.muted=true; track.muted=false; }
+  else if(vid){ vid.muted=false; }
 }
-function setSound(on){
-  soundOn=on;
-  $$("#feed .reel-card").forEach(card=>{
-    if(on) card.classList.remove("wants-sound");
+document.addEventListener("pointerdown", ()=>{
+  $$("#feed .reel-card.playing").forEach(card=>{
     applyCardSound(card);
     const vid=card.querySelector("video");
-    if(on && card.classList.contains("playing") && vid && vid.paused) vid.play().catch(()=>{});
+    if(vid && vid.paused) vid.play().catch(()=>{});
+    const track=card.querySelector("audio[data-track]");
+    if(track && track.paused) track.play().catch(()=>{});
   });
-  $$("#feed [data-mute]").forEach(b=>{ b.innerHTML = soundOn ? speakerOnSVG : speakerOffSVG; });
-}
+}, true);
 
 /* Hashtags live in the caption: "#skate" anywhere in the text is a tag.
    tagAffinity learns, per user, which tags they engage with — seeded from
@@ -1392,8 +1396,7 @@ async function refreshPostCounts(postId){
   const v = VIDEOS.find(x=>x.id===postId); if(!v) return;
   v.likes = lc || 0; v.commentCount = cc || 0;
   syncLikeUI(postId);
-  const cc2 = document.querySelector(`#feed [data-comments="${postId}"] span:last-child`);
-  if(cc2) cc2.textContent = fmt(v.commentCount);
+  syncCommentCount(v);
 }
 
 function forYouScore(v){
@@ -1440,7 +1443,6 @@ function renderFeed(){
         ${v.videoUrl ? `<video src="${v.videoUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loop playsinline preload="auto"></video>`
                       : `<img class="poster" src="${v.img}" alt="Photo by ${esc(v.author)}" />`}
         ${useTrack ? `<audio data-track src="${audio.url}" loop preload="auto" style="display:none;"></audio>` : ""}
-        ${v.videoUrl ? `<button class="mute-btn" data-mute aria-label="Toggle sound">${soundOn ? speakerOnSVG : speakerOffSVG}</button><button class="tap-sound" data-tapsound>${speakerOffSVG}<span>Tap for sound</span></button>` : ""}
         <div class="reel-shade"></div>
         ${isPhoto ? "" : `<div class="paused-badge"><span><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg></span></div>`}
         <div class="big-heart"><svg viewBox="0 0 24 24"><path d="M12 20.7C6 16.6 3 13.2 3 9.6 3 7 5 5 7.4 5c1.7 0 3.4 1 4.6 2.7C13.2 6 14.9 5 16.6 5 19 5 21 7 21 9.6c0 3.6-3 7-9 11.1z"/></svg></div>
@@ -1448,12 +1450,12 @@ function renderFeed(){
           <div class="reel-author"><span>${esc(v.handle)}</span>${v.mine?"":`<button class="follow-chip ${following?"following":""}" data-follow="${v.userId}">${following?"Following":"Follow"}</button>`}</div>
           <p class="reel-cap"></p>
           ${extraTags.length ? `<div class="reel-tags">${extraTags.map(t=>`<span>${esc(t)}</span>`).join("")}</div>` : ""}
-          ${audio ? `<button class="reel-audio" data-audio="${audio.id}"><span class="disc">${discSVG}</span><span class="ra-title">${esc(audio.title)}</span><span class="ra-by">· @${esc(audioCreator ? audioCreator.username : "")}</span></button>` : ""}
+          ${audio ? `<button class="reel-audio" data-audio="${audio.id}"><span class="disc">${discSVG}</span><span class="ra-title">${esc(audio.title)}</span><span class="ra-by">· @${esc(audioCreator ? audioCreator.username : "")}</span></button>` : (v.videoUrl ? `<div class="reel-audio"><span class="disc">${discSVG}</span><span class="ra-title">Original audio</span><span class="ra-by">· ${esc(v.handle)}</span></div>` : "")}
         </div>
         <div class="reel-rail">
           <div class="rail-avatar">${avatarHTML(v,"md")}${v.mine?"":`<span class="plus ${following?"done":""}" data-follow="${v.userId}">${following?"✓":"+"}</span>`}</div>
           <button class="rail-btn ${liked?"liked":""}" data-like="${v.id}"><span class="ic">${heartSVG}</span><span data-likecount="${v.id}">${fmt(v.likes)}</span></button>
-          <button class="rail-btn" data-comments="${v.id}"><span class="ic">${commentSVG}</span><span>${fmt(v.commentCount)}</span></button>
+          <button class="rail-btn" data-comments="${v.id}"><span class="ic">${commentSVG}</span><span data-ccount="${v.id}">${fmt(v.commentCount)}</span></button>
           <button class="rail-btn ${saved?"saved":""}" data-save="${v.id}"><span class="ic">${bookmarkSVG}</span><span>${saved?"Saved":"Save"}</span></button>
           <button class="rail-btn" data-share="${v.id}"><span class="ic">${shareSVG}</span><span>${v.shares}</span></button>
         </div>
@@ -1468,10 +1470,8 @@ function bindFeedEvents(){
   $$("#feed [data-like]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); toggleLike(b.dataset.like); }));
   $$("#feed [data-save]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); toggleSave(b.dataset.save); }));
   $$("#feed [data-comments]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); openComments(b.dataset.comments); }));
-  $$("#feed [data-share]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); toast("Link copied — send it to whoever needs to see this"); }));
+  $$("#feed [data-share]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); sharePost(b.dataset.share, b); }));
   $$("#feed [data-follow]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); toggleFollow(b.dataset.follow); }));
-  $$("#feed [data-mute]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); setSound(!soundOn); }));
-  $$("#feed [data-tapsound]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); setSound(true); }));
   $$("#feed [data-audio]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); openAudioSheet(b.dataset.audio); }));
   $$("#feed .reel-card").forEach(card=>{
     let lastTap=0;
@@ -1482,6 +1482,25 @@ function bindFeedEvents(){
       else { lastTap=now; setTimeout(()=>{ if(lastTap && Date.now()-lastTap>=310) togglePlay(card); }, 320); }
     });
   });
+}
+/* Share opens the device share sheet (navigator.share — the iOS/Android
+   native sheet). Where that's unavailable it falls back to copying the
+   link. Cancelling the sheet doesn't count as a share. */
+async function sharePost(id, btn){
+  const v=VIDEOS.find(x=>x.id===id); if(!v) return;
+  const url="https://reelio-official.pages.dev/";
+  const text=(v.caption || "").trim() || "Watch this on Reelio";
+  let shared=false;
+  if(navigator.share){
+    try{ await navigator.share({ title:"Reelio", text, url }); shared=true; }
+    catch(e){ if(e && e.name==="AbortError") return; }
+  }
+  if(!shared){
+    try{ await navigator.clipboard.writeText(url); toast("Link copied — send it to whoever needs to see this"); shared=true; }
+    catch(e){ toast("Sharing isn't available here right now"); return; }
+  }
+  v.shares+=1;
+  if(btn && btn.lastElementChild) btn.lastElementChild.textContent=v.shares;
 }
 function togglePlay(card){
   const vid=card.querySelector("video");
@@ -1558,7 +1577,7 @@ function observeReels(){
         applyCardSound(card);
         if(vid){
           const p=vid.play();
-          if(p) p.catch(()=>{ if(!vid.muted){ vid.muted=true; card.classList.add("wants-sound"); vid.play().catch(()=>{}); } });
+          if(p) p.catch(()=>{ if(!vid.muted){ vid.muted=true; vid.play().catch(()=>{}); } });
         }
         if(track) track.play().catch(()=>{});
       }
@@ -1591,10 +1610,52 @@ function openSheet(id){
   $$(".sheet").forEach(s=>s.classList.remove("show"));
   $("#"+id).classList.add("show");
 }
-function closeSheets(){ $("#scrim").classList.remove("show"); $$(".sheet").forEach(s=>s.classList.remove("show")); hidePopups(); const ap=$("#audioPreview"); if(ap){ try{ ap.pause(); }catch(e){} } }
+function closeSheets(){ $("#scrim").classList.remove("show"); $$(".sheet").forEach(s=>s.classList.remove("show")); hidePopups(); const cs=$("#commentsSheet"); if(cs){ cs.classList.remove("expanded"); cs.style.transform=""; } const ap=$("#audioPreview"); if(ap){ try{ ap.pause(); }catch(e){} } }
 $("#scrim").addEventListener("click", closeSheets);
 $$("[data-close]").forEach(b=>b.addEventListener("click", closeSheets));
 document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeSheets(); hidePopups(); } });
+
+/* Comments sheet gestures (mobile): drag down on the grab handle / header
+   — or pull down on the comment list when it's already at the top — to
+   close it; drag up on the handle / header to expand it full-screen so
+   only the comments are visible. Swiping down again shrinks it back,
+   then closes it. */
+(function(){
+  const sheet=$("#commentsSheet"); if(!sheet) return;
+  const body=sheet.querySelector(".sheet-body");
+  let startY=null, dragging=false, canExpand=false;
+  sheet.addEventListener("touchstart", e=>{
+    if(!sheet.classList.contains("show")) return;
+    if(!window.matchMedia("(max-width:760px)").matches) return;
+    const inHead=!!e.target.closest(".sheet-grab, .sheet-head");
+    const inBodyAtTop=!!(body && body.contains(e.target) && body.scrollTop<=0);
+    dragging=inHead || inBodyAtTop;
+    canExpand=inHead;
+    startY=dragging ? e.touches[0].clientY : null;
+    if(dragging) sheet.style.transition="none";
+  }, { passive:true });
+  sheet.addEventListener("touchmove", e=>{
+    if(!dragging || startY===null) return;
+    const dy=e.touches[0].clientY-startY;
+    if(dy>0) sheet.style.transform=`translateY(${dy}px)`;
+  }, { passive:true });
+  const endDrag=e=>{
+    if(startY===null) return;
+    const dy=e.changedTouches[0].clientY-startY;
+    sheet.style.transition=""; sheet.style.transform="";
+    if(dragging){
+      if(dy>70){
+        if(sheet.classList.contains("expanded")) sheet.classList.remove("expanded");
+        else closeSheets();
+      } else if(dy<-70 && canExpand){
+        sheet.classList.add("expanded");
+      }
+    }
+    startY=null; dragging=false; canExpand=false;
+  };
+  sheet.addEventListener("touchend", endDrag);
+  sheet.addEventListener("touchcancel", endDrag);
+})();
 
 /* ================= COMMENTS ================= */
 /* Threaded like YouTube: every comment can be replied to, and replies can
@@ -1616,6 +1677,7 @@ let replyTo = null;                  // {id, username} the composer is answering
 async function openComments(id){
   state.commentVideoId=id;
   clearReplyTo();
+  const csheet=$("#commentsSheet"); if(csheet){ csheet.classList.remove("expanded"); csheet.style.transform=""; }
   const v=VIDEOS.find(x=>x.id===id); if(!v) return;
   $("#commentsTitle").textContent="Comments";
   $("#commentList").innerHTML='<p class="empty-note" style="text-align:center; padding:18px 0;">Loading…</p>';
@@ -1707,7 +1769,7 @@ function clearReplyTo(){
 }
 $("#replyCancel").addEventListener("click", clearReplyTo);
 function syncCommentCount(v){
-  const cc=document.querySelector(`#feed [data-comments="${v.id}"] span:last-child`); if(cc) cc.textContent=fmt(v.commentCount);
+  $$("#feed [data-ccount]").forEach(el=>{ if(el.dataset.ccount===v.id) el.textContent=fmt(v.commentCount); });
   if(state.commentVideoId===v.id) $("#commentsTitle").textContent= v.commentCount ? `Comments · ${fmt(v.commentCount)}` : "Comments";
 }
 async function toggleCommentPin(c){
@@ -1759,6 +1821,7 @@ async function deleteComment(c){
   v.commentCount=Math.max(0, v.commentCount-1);
   if(replyTo && replyTo.id===c.id) clearReplyTo();
   renderComments(); syncCommentCount(v);
+  refreshPostCounts(v.id);   // reconcile with the server's exact count right away
   toast("Comment deleted");
 }
 /* --- reporting + on-device toxicity check --- */
@@ -1863,6 +1926,7 @@ async function openUserProfile(userId){
     });
     grid.appendChild(b);
   });
+  primeThumbVideos(grid);
 }
 function updateUserFollowBtn(){
   const btn=$("#userFollowBtn"); if(!btn || !profileUserId) return;
@@ -1899,14 +1963,27 @@ $("#commentForm").addEventListener("submit", async e=>{
   if(v.commentsLoaded){ v.comments.push(nc); renderComments(); $("#commentList").scrollTop=1e6; }
   v.commentCount+=1;
   syncCommentCount(v);
+  refreshPostCounts(v.id);   // reconcile with the server's exact count right away
   toast("Comment posted");
 });
 
 /* ================= DISCOVER ================= */
 function thumbMedia(v, alt){
   return v.videoUrl
-    ? `<video src="${v.videoUrl}" muted playsinline preload="metadata" aria-label="${alt}"></video>`
+    ? `<video src="${v.videoUrl}#t=0.1" data-thumbvid muted playsinline preload="metadata" aria-label="${alt}"></video>`
     : `<img src="${v.img}" alt="${alt}" loading="lazy" />`;
+}
+/* A video thumbnail must show the video's first frame, not a blank tile.
+   The #t=0.1 media fragment asks the browser to paint the frame at 0.1s;
+   this seek is the backstop for browsers (older iOS) that ignore the
+   fragment but will paint a frame once currentTime moves. */
+function primeThumbVideos(scope){
+  (scope || document).querySelectorAll("video[data-thumbvid]").forEach(vid=>{
+    if(vid._primed) return; vid._primed=true;
+    const seek=()=>{ try{ if(vid.readyState>=1 && !vid.currentTime) vid.currentTime=0.1; }catch(e){} };
+    vid.addEventListener("loadedmetadata", seek);
+    if(vid.readyState>=1) seek();
+  });
 }
 function renderThumbs(list){
   const grid=$("#thumbGrid"); grid.innerHTML="";
@@ -1918,6 +1995,7 @@ function renderThumbs(list){
       requestAnimationFrame(()=>{ const el=$(`#feed .reel[data-id="${v.id}"]`); if(el) el.scrollIntoView(); }); });
     grid.appendChild(b);
   });
+  primeThumbVideos(grid);
   const empty=$("#discoverEmpty");
   empty.style.display=list.length? "none":"block";
   if(!list.length){
@@ -1981,6 +2059,7 @@ function renderProfileGrid(){
       requestAnimationFrame(()=>{ const el=$(`#feed .reel[data-id="${v.id}"]`); if(el) el.scrollIntoView(); }); });
     grid.appendChild(b);
   });
+  primeThumbVideos(grid);
 }
 $$("[data-ptab]").forEach(b=>b.addEventListener("click", ()=>{
   $$("[data-ptab]").forEach(x=>x.classList.remove("on")); b.classList.add("on");
@@ -2225,6 +2304,7 @@ async function openAudioSheet(audioId){
     });
     box.appendChild(b);
   });
+  primeThumbVideos(box);
   openSheet("audioSheet");
 }
 $("#useAudioBtn").addEventListener("click", ()=>{
@@ -2648,8 +2728,9 @@ function subscribeRealtime(){
     .on("postgres_changes", { event:"INSERT", schema:"public", table:"reelio_comments" }, payload=>{
       const pid=payload.new.post_id;
       const v=VIDEOS.find(x=>x.id===pid); if(!v) return;
+      if(payload.new.user_id===ME.id) return;   // my own insert already counted it
       v.commentCount+=1;
-      const cc=document.querySelector(`#feed [data-comments="${pid}"] span:last-child`); if(cc) cc.textContent=fmt(v.commentCount);
+      syncCommentCount(v);
       if(state.commentVideoId===pid && $("#commentsSheet").classList.contains("show")){
         ensureProfiles([payload.new.user_id]).then(()=>{
           if(v.commentsLoaded && payload.new.user_id!==ME.id){
@@ -2659,6 +2740,16 @@ function subscribeRealtime(){
           }
         });
       }
+    })
+    .on("postgres_changes", { event:"DELETE", schema:"public", table:"reelio_comments" }, payload=>{
+      const pid=payload.old && payload.old.post_id;
+      if(!pid) return;
+      const v=VIDEOS.find(x=>x.id===pid); if(!v) return;
+      if(v.commentsLoaded && payload.old.id && v.comments.some(c=>c.id===payload.old.id)){
+        v.comments=v.comments.filter(c=>c.id!==payload.old.id);
+        if(state.commentVideoId===pid) renderComments();
+      }
+      refreshPostCounts(pid);   // exact server count — my own delete already reconciled, this just agrees with it
     })
     .subscribe();
 
@@ -2867,7 +2958,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.5.0";
+const APP_VERSION = "1.5.1";
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
 function versionParts(v){ return String(v||"0").split(".").map(n=>parseInt(n,10)||0); }
 function isNewer(remote, local){
@@ -2967,7 +3058,7 @@ function initUpdates(){
   const openSettings = ()=>{ const acct=$("#settingsAccount"); if(acct && ME) acct.textContent = "Signed in as "+(ME.display_name||ME.username)+" ("+"@"+ME.username+")"; setUpdateStatus(""); openSheet("settingsSheet"); };
   const sb1=$("#settingsBtn"); if(sb1) sb1.addEventListener("click", openSettings);
   const sb2=$("#sideSettingsBtn"); if(sb2) sb2.addEventListener("click", openSettings);
-  const so=$("#settingsSignOutBtn"); if(so) so.addEventListener("click", async ()=>{ closeSheets(); const b=$("#signOutBtn"); if(b) b.click(); else if(sb){ await sb.auth.signOut(); location.reload(); } });
+  const so=$("#settingsSignOutBtn"); if(so) so.addEventListener("click", async ()=>{ closeSheets(); await doSignOut(); });
   if("serviceWorker" in navigator){
     // Reload only when the user actually tapped Update (applyUpdate sets
     // updateApplying). A waiting worker taking control on its own must
