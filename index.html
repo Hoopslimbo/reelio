@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.5.2" />
+<meta name="app-version" content="1.5.3" />
 <title>Reelio</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -149,8 +149,8 @@
   @media (max-width:760px){
     .reel{padding:0; width:100%; max-width:100%; overflow:hidden;}
     .reel-card{max-width:100%; width:100%; height:100%; max-height:none; aspect-ratio:auto; border-radius:0; box-shadow:none;}
-    .reel-meta{bottom:calc(94px + env(safe-area-inset-bottom));}
-    .reel-rail{bottom:calc(208px + env(safe-area-inset-bottom));}
+    .reel-meta{bottom:calc(84px + env(safe-area-inset-bottom));}
+    .reel-rail{bottom:calc(204px + env(safe-area-inset-bottom));}
     .reel-progress{bottom:calc(66px + env(safe-area-inset-bottom));}
     .view{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
     #view-feed{padding-bottom:0;}
@@ -164,7 +164,7 @@
   .reel-author{display:flex; align-items:center; gap:9px; font-weight:800; font-size:16.5px; text-shadow:0 1px 6px rgba(0,0,0,.55);}
   .follow-chip{font-size:12.5px; font-weight:700; border:1.5px solid var(--teal-bright); color:var(--teal-bright); border-radius:7px; padding:3px 9px; background:rgba(0,0,0,.25);}
   .follow-chip.following{border-color:rgba(255,255,255,.5); color:#fff;}
-  .reel-cap{margin-top:9px; font-size:14.5px; line-height:1.45; text-shadow:0 1px 6px rgba(0,0,0,.6); max-width:46ch;}
+  .reel-cap{margin-top:9px; font-size:14.5px; line-height:1.32; text-shadow:0 1px 6px rgba(0,0,0,.6); max-width:46ch;}
   .reel-cap .htag{color:var(--teal-bright); font-weight:700;}
   .reel-tags{margin-top:6px; font-size:13.5px; font-weight:700; color:#dffcf6; text-shadow:0 1px 6px rgba(0,0,0,.6);}
   .reel-tags span{margin-right:9px;}
@@ -540,7 +540,7 @@
   }
 
   /* ---------- Audio on reels ---------- */
-  .reel-audio{display:flex; align-items:center; gap:7px; margin-top:8px; color:#fff; font-size:13.5px; font-weight:600; padding:2px 0; max-width:100%; text-align:left; text-shadow:0 1px 6px rgba(0,0,0,.6);}
+  .reel-audio{display:flex; align-items:center; gap:7px; margin-top:8px; color:#fff; font-size:13.5px; font-weight:600; padding:0; max-width:100%; text-align:left; text-shadow:0 1px 6px rgba(0,0,0,.6);}
   .reel-audio .disc{width:16px; height:16px; flex:none; display:flex;}
   .reel-audio .disc svg{width:16px; height:16px;}
   .reel-card.playing .reel-audio .disc svg{animation:discspin 3.4s linear infinite;}
@@ -553,18 +553,33 @@
   /* The video layer gets its geometry from this class only — nothing else
      styles it, so it always bleeds to the card's edges with no strip. */
   .reel-video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#000; display:block;}
-  .reel-meta{display:flex; gap:11px; align-items:flex-start;}
+  .reel-meta{display:flex; gap:9px; align-items:flex-start;}
   .meta-ava{flex:none; padding:0; border-radius:50%; line-height:0;}
   .meta-ava:active{transform:scale(.94);}
   .meta-main{flex:1; min-width:0;}
   .author-name{font:inherit; color:#fff; padding:0; text-align:left; text-shadow:inherit;}
-  .meta-main .reel-cap{margin-top:4px;}
-  .meta-main .reel-audio{margin-top:7px;}
-  .reel-disc{position:absolute; right:12px; bottom:20px; width:42px; height:42px; border-radius:50%; padding:0; z-index:6; background:#0c0c0e; border:2.5px solid rgba(255,255,255,.92); box-shadow:0 4px 14px rgba(0,0,0,.45); overflow:hidden; display:flex; align-items:center; justify-content:center; flex:none;}
+  .meta-main .reel-cap{margin-top:2px;}
+  .meta-main .reel-audio{margin-top:3px;}
+  .reel-disc{position:absolute; right:10px; bottom:20px; width:42px; height:42px; border-radius:50%; padding:0; z-index:6; background:#0c0c0e; border:2.5px solid rgba(255,255,255,.92); box-shadow:0 4px 14px rgba(0,0,0,.45); overflow:hidden; display:flex; align-items:center; justify-content:center; flex:none;}
   .reel-disc .avatar{width:100%; height:100%; font-size:15px;}
   .reel-card.playing .reel-disc{animation:discspin 3.4s linear infinite;}
   @media (prefers-reduced-motion: reduce){ .reel-card.playing .reel-disc{animation:none;} }
-  @media (max-width:760px){ .reel-disc{bottom:calc(94px + env(safe-area-inset-bottom));} }
+  @media (max-width:760px){ .reel-disc{bottom:calc(84px + env(safe-area-inset-bottom)); right:10px;} }
+  /* Mobile overlay lift — this block MUST stay after every base reel rule.
+     The first mobile media query (near the top of the feed styles) sets
+     these same bottoms, but the base .reel-meta/.reel-rail/.reel-progress
+     rules come after it in the file and silently won, leaving the caption
+     block at bottom:20px — behind the fixed bottom nav, which is why the
+     @handle, title and audio line kept looking cut off. These late rules
+     are the ones that actually apply: on phones the whole overlay stack
+     (caption block, action rail, progress bar, audio disc) sits clearly
+     above the bottom nav. */
+  @media (max-width:760px){
+    .reel-meta{bottom:calc(84px + env(safe-area-inset-bottom));}
+    .reel-rail{bottom:calc(204px + env(safe-area-inset-bottom));}
+    .reel-progress{bottom:calc(66px + env(safe-area-inset-bottom));}
+    .reel-disc{bottom:calc(84px + env(safe-area-inset-bottom)); right:10px;}
+  }
   .reel-end{background:#000;}
   .end-inner{display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:24px; color:#fff;}
   .end-inner .ring{width:54px; height:54px; border-width:7px; margin-bottom:6px;}
@@ -582,6 +597,8 @@
   .audio-post-row .apr-main{flex:1; min-width:0;}
   .audio-post-row .apr-main b{display:block; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .audio-post-row .apr-main span{font-size:12.5px; color:var(--text-2);}
+  .audio-post-row .apr-likes{display:inline-flex; align-items:center; gap:4px; margin-left:10px;}
+  .audio-post-row .apr-likes svg{width:13px; height:13px;}
   .audio-chip{display:flex; align-items:center; gap:9px; background:var(--bg-3); border:1px solid var(--line-soft); border-radius:11px; padding:10px 12px; font-size:14px;}
   .audio-chip svg{width:18px; height:18px; color:var(--teal); flex:none;}
   .audio-chip b{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700;}
@@ -655,7 +672,7 @@
     <nav id="sideNav">
       <button class="nav-item active" data-view="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>For You</button>
       <button class="nav-item" data-view="discover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</button>
-      <button class="nav-item" data-view="inbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg>Messages<span class="dot" id="sideUnread">3</span></button>
+      <button class="nav-item" data-view="inbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg>Messages<span class="dot" id="sideUnread" style="display:none"></span></button>
       <button class="nav-item" data-view="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-5.5 8-5.5s6.5 1.5 8 5.5"/></svg>Profile</button>
     </nav>
     <button class="upload-btn" id="sideUpload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Create post</button>
@@ -665,7 +682,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.5.2</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.5.3</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -802,7 +819,7 @@
   <button data-view="feed" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>Home</button>
   <button data-view="discover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Discover</button>
   <button id="mobileUpload" aria-label="Upload"><span class="create-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
-  <button data-view="inbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg>Messages<span class="dot" id="mobileUnread">3</span></button>
+  <button data-view="inbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg>Messages<span class="dot" id="mobileUnread" style="display:none"></span></button>
   <button data-view="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-5.5 8-5.5s6.5 1.5 8 5.5"/></svg>Profile</button>
 </nav>
 
@@ -996,7 +1013,7 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.2</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.3</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
     </div>
     <div class="setting-row" style="display:block;">
       <div class="sr-main" style="margin-bottom:9px;"><b>Appearance</b><span>Dark is Reelio's classic look. Light flips the whole app — feed, chats, sheets, everything.</span></div>
@@ -1006,7 +1023,7 @@
       </div>
     </div>
     <div class="setting-row">
-      <div class="sr-main"><b>Check for Updates</b><span>Reelio never updates on its own — nothing installs in the background. Tap Check to look for a new version and install it right away.</span></div>
+      <div class="sr-main"><b>Check for Updates</b><span>Reelio never updates on its own — nothing installs or swaps in the background. Tap Check to look for a new version; if one is ready, this button turns into Update and only that tap installs it.</span></div>
       <button class="btn btn-teal" id="checkUpdateBtn">Check</button>
     </div>
     <p class="update-status" id="updateStatus" role="status"></p>
@@ -1271,6 +1288,7 @@ function switchView(v){
   $$("#sideNav .nav-item, #bottomNav [data-view]").forEach(b=>b.classList.toggle("active", b.dataset.view===v));
   $$("#bottomNav [data-view]").forEach(b=>b.classList.toggle("on", b.dataset.view===v));
   if(v==="feed") requestAnimationFrame(observeReels);
+  if(v==="profile"){ renderStats(); renderProfileGrid(); }
 }
 $$("[data-view]").forEach(b=>b.addEventListener("click", ()=>switchView(b.dataset.view)));
 $("#feedSearchBtn").addEventListener("click", ()=>switchView("discover"));
@@ -1292,8 +1310,11 @@ const heartMiniSVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 
    the first tap anywhere on the page, so a blocked first play falls back
    to muted for that one play; the first pointerdown unlocks sound on
    whatever is currently playing. */
+const REEL_VOLUME=0.7;   // reels play at 70% volume by default, not full blast
 function applyCardSound(card){
   const vid=card.querySelector("video"), track=card.querySelector("audio[data-track]");
+  if(vid) vid.volume=REEL_VOLUME;
+  if(track) track.volume=REEL_VOLUME;
   if(track){ if(vid) vid.muted=true; track.muted=false; }
   else if(vid){ vid.muted=false; }
 }
@@ -1563,8 +1584,12 @@ function syncLikeUI(id){
   const v=VIDEOS.find(x=>x.id===id); if(!v) return;
   const liked=state.liked.has(id);
   $$(`#feed [data-like="${id}"]`).forEach(b=>b.classList.toggle("liked", liked));
+  // Every like count anywhere (feed rail, Discover thumbs, profile grid,
+  // Liked tab, user sheets, audio sheet) carries data-likecount, so this
+  // one pass keeps them all in step with the feed.
   $$(`[data-likecount="${id}"]`).forEach(el=>el.textContent=fmt(v.likes));
   renderStats();
+  renderProfileGrid();   // Liked tab membership + profile counts follow the feed instantly
 }
 function toggleSave(id){
   const on=!state.saved.has(id);
@@ -1943,7 +1968,7 @@ async function openUserProfile(userId){
   rows.forEach(row=>{
     const b=document.createElement("button"); b.className="thumb";
     let vm=VIDEOS.find(x=>x.id===row.id);
-    b.innerHTML=`${thumbMedia(vm || postVM(row,0,0), "Post by "+esc(person.name))}<div class="t-meta"><b></b></div>`;
+    b.innerHTML=`${thumbMedia(vm || postVM(row,0,0), "Post by "+esc(person.name))}<div class="t-meta"><b></b>${vm?`<span>${heartSVG}<span data-likecount="${vm.id}">${fmt(vm.likes)}</span></span>`:""}</div>`;
     b.querySelector("b").textContent=row.caption||"";
     b.addEventListener("click", ()=>{
       if(!vm){ vm=postVM(row,0,0); VIDEOS.unshift(vm); }
@@ -2017,7 +2042,7 @@ function renderThumbs(list){
   const grid=$("#thumbGrid"); grid.innerHTML="";
   list.forEach(v=>{
     const b=document.createElement("button"); b.className="thumb"; b.dataset.thumb=v.id;
-    b.innerHTML=`${thumbMedia(v, "Post by "+esc(v.author))}<div class="t-meta"><b></b><span>${heartSVG}${fmt(v.likes)}</span></div>`;
+    b.innerHTML=`${thumbMedia(v, "Post by "+esc(v.author))}<div class="t-meta"><b></b><span>${heartSVG}<span data-likecount="${v.id}">${fmt(v.likes)}</span></span></div>`;
     b.querySelector("b").textContent=v.caption;
     b.addEventListener("click", ()=>{ switchView("feed"); state.feedTab="foryou"; $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou")); renderFeed();
       requestAnimationFrame(()=>{ const el=$(`#feed .reel[data-id="${v.id}"]`); if(el) el.scrollIntoView(); }); });
@@ -2081,7 +2106,7 @@ function renderProfileGrid(){
   }
   list.forEach(v=>{
     const b=document.createElement("button"); b.className="thumb";
-    b.innerHTML=`${thumbMedia(v, "Post: "+esc(v.caption))}<div class="t-meta"><b></b><span>${heartSVG}${fmt(v.likes)}</span></div>`;
+    b.innerHTML=`${thumbMedia(v, "Post: "+esc(v.caption))}<div class="t-meta"><b></b><span>${heartSVG}<span data-likecount="${v.id}">${fmt(v.likes)}</span></span></div>`;
     b.querySelector("b").textContent=v.caption;
     b.addEventListener("click", ()=>{ switchView("feed"); state.feedTab="foryou"; $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou")); renderFeed();
       requestAnimationFrame(()=>{ const el=$(`#feed .reel[data-id="${v.id}"]`); if(el) el.scrollIntoView(); }); });
@@ -2322,7 +2347,7 @@ async function openAudioSheet(audioId){
   }
   users.forEach(v=>{
     const b=document.createElement("button"); b.className="audio-post-row";
-    b.innerHTML=`<span class="apr-thumb">${thumbMedia(v, "Post by "+esc(v.author))}</span><span class="apr-main"><b></b><span>@${esc(profOf(v.userId).username)}</span></span>`;
+    b.innerHTML=`<span class="apr-thumb">${thumbMedia(v, "Post by "+esc(v.author))}</span><span class="apr-main"><b></b><span>@${esc(profOf(v.userId).username)}</span><span class="apr-likes">${heartSVG}<span data-likecount="${v.id}">${fmt(v.likes)}</span></span></span>`;
     b.querySelector("b").textContent=v.caption || "Untitled post";
     b.addEventListener("click", ()=>{
       closeSheets(); switchView("feed"); state.feedTab="foryou";
@@ -2986,7 +3011,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.5.2";
+const APP_VERSION = "1.5.3";
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
 function versionParts(v){ return String(v||"0").split(".").map(n=>parseInt(n,10)||0); }
 function isNewer(remote, local){
@@ -3025,19 +3050,31 @@ async function checkForUpdates(opts){
   if((remoteVersion && isNewer(remoteVersion, APP_VERSION)) || waitingSW){
     const v = remoteVersion && isNewer(remoteVersion, APP_VERSION) ? remoteVersion : null;
     pendingVersion = v || pendingVersion || "sw";
+    // A check NEVER installs — not even a manual one. Finding an update
+    // only arms the two explicit install taps: Update on the banner, or
+    // the Settings button (which relabels to "Update to vX" and installs
+    // only when tapped again). Nothing else in this app calls applyUpdate.
+    armSettingsUpdate(v);
     if(manual){
-      // Tapping "Check for Updates" in Settings is an install action:
-      // a newer version found here loads right away.
-      setUpdateStatus("Update found — installing Reelio v"+(v || "the latest version")+" now…");
+      setUpdateStatus("Reelio v"+(v || "the latest version")+" is ready — tap Update to install it. Nothing installs until you do.");
       showUpdateBanner(v);
-      applyUpdate();
     } else if(updateDismissedFor !== (v || "sw")){
       showUpdateBanner(v);
     }
     return true;
   }
-  if(manual) setUpdateStatus("You're up to date — Reelio v"+APP_VERSION+" is the latest version.", true);
+  if(manual){ disarmSettingsUpdate(); setUpdateStatus("You're up to date — Reelio v"+APP_VERSION+" is the latest version.", true); }
   return false;
+}
+function armSettingsUpdate(v){
+  const btn=$("#checkUpdateBtn"); if(!btn) return;
+  btn.dataset.pending="1";
+  btn.textContent = v ? "Update to v"+v : "Update now";
+}
+function disarmSettingsUpdate(){
+  const btn=$("#checkUpdateBtn"); if(!btn) return;
+  delete btn.dataset.pending;
+  btn.textContent="Check";
 }
 async function hardReloadFresh(){
   // Primary update path for home-screen installs: clear Cache Storage,
@@ -3082,7 +3119,10 @@ function initUpdates(){
   if(nowBtn) nowBtn.addEventListener("click", applyUpdate);
   if(laterBtn) laterBtn.addEventListener("click", ()=>{ updateDismissedFor = pendingVersion || "sw"; hideUpdateBanner(); toast("Okay — nothing installs until you tap Update"); });
   const checkBtn=$("#checkUpdateBtn");
-  if(checkBtn) checkBtn.addEventListener("click", ()=>checkForUpdates({ manual:true }));
+  // The Settings button has two states: "Check" only looks for an update;
+  // once one is found it relabels to "Update to vX" and THAT tap — and
+  // only that tap, or the banner's Update button — installs it.
+  if(checkBtn) checkBtn.addEventListener("click", ()=>{ if(checkBtn.dataset.pending==="1") applyUpdate(); else checkForUpdates({ manual:true }); });
   const openSettings = ()=>{ const acct=$("#settingsAccount"); if(acct && ME) acct.textContent = "Signed in as "+(ME.display_name||ME.username)+" ("+"@"+ME.username+")"; setUpdateStatus(""); openSheet("settingsSheet"); };
   const sb1=$("#settingsBtn"); if(sb1) sb1.addEventListener("click", openSettings);
   const sb2=$("#sideSettingsBtn"); if(sb2) sb2.addEventListener("click", openSettings);
