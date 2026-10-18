@@ -1,6 +1,6 @@
 /* Reelio service worker — network-first so updates land without reinstalling.
    Bump VERSION together with version.json and APP_VERSION in index.html. */
-const VERSION = "1.4.1";
+const VERSION = "1.4.4";
 const CACHE = "reelio-v" + VERSION;
 const CORE = [
   "./manifest.webmanifest",
