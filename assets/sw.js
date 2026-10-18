@@ -8,7 +8,7 @@
    open pages, and its fetch handler never writes a fresher shell or asset
    over a cached one — the network only fills slots that are empty. Bump
    VERSION together with version.json and APP_VERSION in index.html. */
-const VERSION = "1.5.7";
+const VERSION = "1.5.9";
 const CACHE = "reelio-v" + VERSION;
 const CORE = [
   "./manifest.webmanifest",
@@ -52,6 +52,18 @@ self.addEventListener("fetch", (event) => {
   // version.json: always fresh from the network, never cached.
   if (url.pathname.endsWith("version.json")) {
     event.respondWith(fetch(req, { cache: "no-store" }).catch(() => caches.match(req)));
+    return;
+  }
+
+  // One-time update navigations (the page's forced reload after an
+  // Update tap) carry a random "r" nonce: ALWAYS straight to the network,
+  // never answered from a cache. The cache-first match below deliberately
+  // uses ignoreSearch, so without this bypass a cache-busted update URL
+  // would still be served the old shell and the update would silently
+  // not take. (The page also unregisters every registration before
+  // navigating, so this is a second line of defense.)
+  if (req.mode === "navigate" && url.searchParams.has("r")) {
+    event.respondWith(fetch(req, { cache: "no-store" }));
     return;
   }
 
