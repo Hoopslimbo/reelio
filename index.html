@@ -4,8 +4,17 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
-<link rel="icon" href="data:," />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+<link rel="manifest" href="assets/manifest.webmanifest" />
+<meta name="theme-color" content="#000000" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="apple-mobile-web-app-title" content="Reelio" />
 <title>Reelio</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root{
     --teal:#17c3b2; --teal-bright:#2ee6cf; --teal-deep:#0b7a6e;
@@ -398,6 +407,47 @@
     .main{padding-bottom:0;}
     .view-feed-pad{padding-bottom:64px;}
   }
+
+  /* ---------- Auth gate ---------- */
+  .auth-gate{position:fixed; inset:0; z-index:300; background:var(--bg); display:none; align-items:center; justify-content:center; padding:22px; overflow-y:auto;}
+  .auth-gate.show{display:flex;}
+  .auth-card{width:min(400px,100%); background:var(--bg-2); border:1px solid var(--line-soft); border-radius:20px; padding:30px 28px 26px; box-shadow:0 24px 70px rgba(0,0,0,.35);}
+  .auth-card .ring{width:46px; height:46px; border-width:6px; margin:0 auto 14px;}
+  .auth-card h1{font-family:var(--font-display); font-size:26px; margin:0; text-align:center; letter-spacing:-.02em;}
+  .auth-card .auth-sub{text-align:center; color:var(--text-2); font-size:14px; margin:6px 0 20px; line-height:1.5;}
+  .auth-tabs{display:flex; background:var(--bg-3); border-radius:11px; padding:4px; margin-bottom:6px;}
+  .auth-tabs button{flex:1; padding:9px; border-radius:8px; font-size:14.5px; font-weight:700; color:var(--text-2);}
+  .auth-tabs button.on{background:var(--bg-2); color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,.18);}
+  .auth-card .field input[type="email"], .auth-card .field input[type="password"]{width:100%; background:var(--bg-3); border:1px solid var(--line-soft); border-radius:10px; padding:11px 13px; font-size:15px; outline:none;}
+  .auth-card .field input:focus{border-color:var(--teal);}
+  .auth-error{display:none; background:rgba(255,93,93,.12); border:1px solid rgba(255,93,93,.4); color:var(--danger); font-size:13.5px; border-radius:10px; padding:9px 12px; margin-top:14px; line-height:1.45;}
+  .auth-error.show{display:block;}
+  .auth-submit{width:100%; margin-top:18px; padding:13px; font-size:15.5px; justify-content:center;}
+  .auth-submit[disabled]{opacity:.55; pointer-events:none;}
+  .boot-splash{position:fixed; inset:0; z-index:290; background:#000; display:flex; align-items:center; justify-content:center;}
+  .boot-splash.hide{display:none;}
+  .boot-splash .ring{width:64px; height:64px; border-width:8px; animation:bootpulse 1.2s ease-in-out infinite alternate;}
+  @keyframes bootpulse{from{transform:scale(.94); opacity:.75;} to{transform:scale(1); opacity:1;}}
+
+  /* ---------- Calls ---------- */
+  .call-ui{position:fixed; inset:0; z-index:250; background:#050807; color:#fff; display:none; flex-direction:column;}
+  .call-ui.show{display:flex;}
+  .call-remote{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#0a0f0e;}
+  .call-local{position:absolute; right:16px; top:calc(16px + env(safe-area-inset-top)); width:104px; aspect-ratio:3/4; object-fit:cover; border-radius:14px; border:1.5px solid rgba(255,255,255,.35); background:#111; z-index:3;}
+  .call-shade{position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,0) 45%, rgba(0,0,0,.4)); z-index:2; pointer-events:none;}
+  .call-center{position:relative; z-index:4; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding:0 24px 26px; text-align:center;}
+  .call-center .avatar{margin-bottom:12px; box-shadow:0 10px 34px rgba(0,0,0,.5);}
+  .call-center h2{margin:0; font-size:24px; font-family:var(--font-display); letter-spacing:-.01em; text-shadow:0 2px 10px rgba(0,0,0,.6);}
+  .call-center p{margin:5px 0 0; font-size:14.5px; color:rgba(255,255,255,.78);}
+  .call-controls{position:relative; z-index:4; display:flex; gap:18px; justify-content:center; padding:0 24px calc(30px + env(safe-area-inset-bottom));}
+  .call-btn{width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,.16); backdrop-filter:blur(8px); color:#fff; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.22);}
+  .call-btn svg{width:26px; height:26px;}
+  .call-btn.off{background:#fff; color:#111;}
+  .call-btn.end{background:#ff4d4d; border-color:#ff4d4d;}
+  .call-btn.accept{background:#2fbf71; border-color:#2fbf71; animation:ringpulse 1.1s ease-in-out infinite;}
+  @keyframes ringpulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.08);}}
+  .thread-call-btns{display:flex; gap:2px;}
+  .msg-media{max-width:230px; border-radius:14px; margin-bottom:5px;}
 </style>
 </head>
 <body>
@@ -421,8 +471,8 @@
     <button class="upload-btn" id="sideUpload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Create post</button>
     <div class="side-foot">
       <button class="me-row" data-view="profile">
-        <span class="avatar sm" style="background:#0e7a6c">L</span>
-        <span class="who"><b>Liam</b><span>@hoopslimbo</span></span>
+        <span id="sideMeAvatar"></span>
+        <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
     </div>
@@ -453,6 +503,10 @@
         </div>
       </div>
       <div class="scroll-area" id="discoverScroll">
+        <div class="disc-section" id="peopleSection" style="display:none;">
+          <h2>People</h2>
+          <div id="peopleResults"></div>
+        </div>
         <div class="disc-section">
           <h2>Latest posts</h2>
           <div class="thumb-grid" id="thumbGrid"></div>
@@ -491,6 +545,10 @@
                 <b id="threadName"></b>
                 <span id="threadSub"></span>
               </button>
+              <span class="thread-call-btns" id="threadCallBtns">
+                <button class="icon-btn" id="voiceCallBtn" aria-label="Voice call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.13.96.36 1.9.7 2.8a2 2 0 0 1-.45 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.45c.9.34 1.84.57 2.8.7A2 2 0 0 1 22 16.9z"/></svg></button>
+                <button class="icon-btn" id="videoCallBtn" aria-label="Video call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h7A2.5 2.5 0 0 1 15 8.5v7A2.5 2.5 0 0 1 12.5 18h-7A2.5 2.5 0 0 1 3 15.5z"/><path d="M15 10.5 21 7v10l-6-3.5"/></svg></button>
+              </span>
               <button class="icon-btn" id="customizeBtn" aria-label="Customize chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.51 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.23.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg></button>
             </div>
             <div class="thread-msgs wp-none" id="threadMsgs"></div>
@@ -512,10 +570,10 @@
       <div class="profile-scroll">
         <div class="profile-inner">
           <div class="profile-top">
-            <span class="avatar xl" style="background:#0e7a6c">L</span>
+            <span id="profileAvatar"></span>
             <div class="profile-id">
-              <h1>Liam <svg class="verified" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 14.4 4.1 17.5 3.7 18.3 6.7 21 8.3 19.9 11.2 21 14.1 18.3 15.7 17.5 18.7 14.4 18.3 12 20.4 9.6 18.3 6.5 18.7 5.7 15.7 3 14.1 4.1 11.2 3 8.3 5.7 6.7 6.5 3.7 9.6 4.1z" transform="scale(.92) translate(1,1)"/><path d="m9.2 12.2 2 2 3.8-4" stroke="#0a0a0b" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></h1>
-              <div class="handle">@hoopslimbo</div>
+              <h1><span id="profileName">…</span></h1>
+              <div class="handle" id="profileHandle"></div>
               <div class="profile-stats">
                 <div class="pstat"><b id="statFollowing">0</b><span>Following</span></div>
                 <div class="pstat"><b id="statFollowers">0</b><span>Followers</span></div>
@@ -523,10 +581,11 @@
               </div>
             </div>
           </div>
-          <p class="profile-bio">Making stuff and posting the process. Skate clips, desk builds, and whatever the group chat dares me to try.</p>
+          <p class="profile-bio" id="profileBio"></p>
           <div class="profile-actions">
             <button class="btn btn-teal" id="profileUpload">Create a post</button>
             <button class="btn btn-ghost" id="editProfileBtn">Edit profile</button>
+            <button class="btn btn-ghost" id="signOutBtn">Sign out</button>
           </div>
           <div class="profile-tabs">
             <button class="on" data-ptab="videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>Videos</button>
@@ -567,7 +626,7 @@
     <div class="comment-list" id="commentList"></div>
   </div>
   <form class="composer" id="commentForm" style="border-top:1px solid var(--line-soft);">
-    <span class="avatar sm" style="background:#0e7a6c">L</span>
+    <span id="commentAvatar"></span>
     <div class="box"><textarea id="commentInput" rows="1" placeholder="Add a comment…"></textarea></div>
     <button type="submit" class="send-btn" aria-label="Post comment"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21.8 12 3.4 3.6l-.01 6.53L14 12 3.39 13.87z"/></svg></button>
   </form>
@@ -603,7 +662,7 @@
   <div class="sheet-grab"></div>
   <div class="sheet-head"><h2>New post</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
-    <p class="hint">Post a photo or a video — upload one you already have, or take a fresh one. It'll appear at the top of your feed and on your profile, right in this session.</p>
+    <p class="hint">Post a photo or a video — upload one you already have, or take a fresh one. It'll appear at the top of the feed and on your profile for everyone.</p>
     <div class="pick-grid" id="pickGrid">
       <button type="button" class="pick-btn" data-pick="filePhoto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="m4.5 18 5-5 3 3 3.5-3.5 3.5 3.5"/></svg>Upload photo<span>From your device</span></button>
       <button type="button" class="pick-btn" data-pick="filePhotoCam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>Take photo<span>Use your camera</span></button>
@@ -650,8 +709,16 @@
   <div class="sheet-grab"></div>
   <div class="sheet-head"><h2>Edit profile</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
-    <div class="field"><label for="profName">Display name</label><input type="text" id="profName" value="Liam" /></div>
-    <div class="field"><label for="profBio">Bio</label><textarea id="profBio" rows="3">Making stuff and posting the process. Skate clips, desk builds, and whatever the group chat dares me to try.</textarea></div>
+    <div class="field"><label>Profile photo</label>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span id="editAvatarPreview"></span>
+        <button type="button" class="btn btn-ghost" id="avatarChangeBtn" style="padding:8px 16px; font-size:13.5px;">Change photo</button>
+      </div>
+      <input type="file" id="avatarFile" accept="image/*" hidden />
+    </div>
+    <div class="field"><label for="profName">Display name</label><input type="text" id="profName" /></div>
+    <div class="field"><label for="profUsername">Username</label><input type="text" id="profUsername" /></div>
+    <div class="field"><label for="profBio">Bio</label><textarea id="profBio" rows="3" placeholder="Tell people what you're about"></textarea></div>
   </div>
   <div class="sheet-actions">
     <button class="btn btn-ghost" data-close>Cancel</button>
@@ -659,60 +726,226 @@
   </div>
 </section>
 
+<!-- ============ BOOT SPLASH ============ -->
+<div class="boot-splash" id="bootSplash"><div class="ring" aria-hidden="true"></div></div>
+
+<!-- ============ AUTH GATE ============ -->
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <div class="ring" aria-hidden="true"></div>
+    <h1>Reelio</h1>
+    <p class="auth-sub" id="authSub">Log in to your account — your posts, messages, and calls are yours alone.</p>
+    <div class="auth-tabs">
+      <button id="tabLogin" class="on">Log in</button>
+      <button id="tabSignup">Sign up</button>
+    </div>
+    <form id="authForm">
+      <div class="field" id="authNameField" style="display:none;"><label for="authDisplayName">Display name</label><input type="text" id="authDisplayName" placeholder="Your name" autocomplete="name" /></div>
+      <div class="field" id="authUserField" style="display:none;"><label for="authUsername">Username</label><input type="text" id="authUsername" placeholder="pick_a_name" autocomplete="username" /></div>
+      <div class="field"><label for="authEmail">Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" required /></div>
+      <div class="field"><label for="authPassword">Password</label><input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" required /></div>
+      <div class="auth-error" id="authError"></div>
+      <button type="submit" class="btn btn-teal auth-submit" id="authSubmit">Log in</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ CALL UI ============ -->
+<div class="call-ui" id="callUI">
+  <video class="call-remote" id="remoteVideo" autoplay playsinline></video>
+  <video class="call-local" id="localVideo" autoplay playsinline muted></video>
+  <div class="call-shade"></div>
+  <div class="call-center">
+    <span id="callAvatar"></span>
+    <h2 id="callName">Calling…</h2>
+    <p id="callStatus">Connecting…</p>
+  </div>
+  <div class="call-controls">
+    <button class="call-btn" id="muteBtn" aria-label="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg></button>
+    <button class="call-btn" id="camBtn" aria-label="Camera on/off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h7A2.5 2.5 0 0 1 15 8.5v7A2.5 2.5 0 0 1 12.5 18h-7A2.5 2.5 0 0 1 3 15.5z"/><path d="M15 10.5 21 7v10l-6-3.5"/></svg></button>
+    <button class="call-btn end" id="hangupBtn" aria-label="End call"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 13.2c-3.9 0-7.6 1.5-10.4 4.1-.4.4-.5 1-.2 1.5l1.4 2.3c.3.5.9.7 1.4.5 1.5-.6 2.8-1.5 3.9-2.6.4-.4.5-1 .2-1.5l-.9-1.6c2.6.7 5.4.7 8 0l-.9 1.6c-.3.5-.2 1.1.2 1.5 1.1 1.1 2.4 2 3.9 2.6.5.2 1.1 0 1.4-.5l1.4-2.3c.3-.5.2-1.1-.2-1.5C19.6 14.7 15.9 13.2 12 13.2zM3.6 3.1C3.1 2.6 2.3 2.6 1.8 3L.3 4.4C-.1 4.8-.1 5.5.2 6 2.9 10.1 7.2 12 12 12s9.1-1.9 11.8-6c.3-.5.3-1.2-.1-1.6L22.2 3c-.5-.4-1.3-.4-1.8.1-1.1 1.2-2.5 2-4 2.6-.5.2-1.1 0-1.4-.5l-1-1.5c-.3-.5-.9-.7-1.4-.5C11 3.7 9.4 3.7 7.9 3.2c-.5-.2-1.1 0-1.4.5l-1 1.5c-.3.5-.9.7-1.4.5C2.6 5.1 1.2 4.3.6 3.2z" transform="rotate(135 12 12) scale(.92) translate(1,1)"/></svg></button>
+  </div>
+</div>
+
+<!-- ============ INCOMING CALL ============ -->
+<div class="call-ui" id="incomingUI">
+  <div class="call-shade"></div>
+  <div class="call-center">
+    <span id="incomingAvatar"></span>
+    <h2 id="incomingName">Someone</h2>
+    <p id="incomingKind">Incoming video call…</p>
+  </div>
+  <div class="call-controls">
+    <button class="call-btn end" id="declineBtn" aria-label="Decline"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 13.2c-3.9 0-7.6 1.5-10.4 4.1-.4.4-.5 1-.2 1.5l1.4 2.3c.3.5.9.7 1.4.5 1.5-.6 2.8-1.5 3.9-2.6.4-.4.5-1 .2-1.5l-.9-1.6c2.6.7 5.4.7 8 0l-.9 1.6c-.3.5-.2 1.1.2 1.5 1.1 1.1 2.4 2 3.9 2.6.5.2 1.1 0 1.4-.5l1.4-2.3c.3-.5.2-1.1-.2-1.5C19.6 14.7 15.9 13.2 12 13.2z" transform="rotate(135 12 12)"/></svg></button>
+    <button class="call-btn accept" id="acceptBtn" aria-label="Accept"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.13.96.36 1.9.7 2.8a2 2 0 0 1-.45 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.45c.9.34 1.84.57 2.8.7A2 2 0 0 1 22 16.9z"/></svg></button>
+  </div>
+</div>
+
 <!-- Floating UI -->
 <div class="menu" id="msgMenu"></div>
 <div class="react-pop" id="reactPop"></div>
 <div class="toast" id="toast"></div>
 
 <script>
-/* ================= DATA ================= */
-const ME = { name:"Liam", handle:"@hoopslimbo", color:"#0e7a6c", initial:"L" };
-const PEOPLE = {
-  maya:   { name:"Maya Chen",   handle:"@maya.makes",  color:"#7c5cd6", initial:"M" },
-  jordan: { name:"Jordan Blake",handle:"@jblake",      color:"#c2600e", initial:"J" },
-  priya:  { name:"Priya Nair",  handle:"@priya.png",   color:"#b03a6b", initial:"P" },
-  sam:    { name:"Sam Rivera",  handle:"@setup.sam",   color:"#2b6cb0", initial:"S" },
-  kai:    { name:"Kai Tanaka",  handle:"@kai.moves",   color:"#4c7a0e", initial:"K" },
-};
+/* ================= SUPABASE ================= */
+const SB_URL = "https://kgrdwrnpzjlfceyfwegk.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtncmR3cm5wempsZmNleWZ3ZWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyODA3NjYsImV4cCI6MjEwNzg1Njc2Nn0.Jk3SfqTJA3GYCeNzOxSYAz2JXPxJ-uMd3t2MvWXvqa0";
+const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
 
-const VIDEOS = [];
+/* ================= HELPERS / STATE ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const PALETTE = ["#7c5cd6","#c2600e","#b03a6b","#2b6cb0","#4c7a0e","#0e7a6c","#a03d8f","#38618c","#8a6d1d","#5b4bc4"];
+function colorFor(id){ let h=0; const s=""+id; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return PALETTE[h%PALETTE.length]; }
+function fmt(n){ return n>=1000 ? (n/1000).toFixed(1).replace(/\.0$/,"")+"K" : ""+n; }
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function clockTime(iso){ if(!iso) return ""; const d=new Date(iso); const now=new Date();
+  if(d.toDateString()===now.toDateString()) return d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  const yest=new Date(now); yest.setDate(now.getDate()-1);
+  if(d.toDateString()===yest.toDateString()) return "Yesterday";
+  return d.toLocaleDateString([], {month:"short", day:"numeric"});
+}
+function relTime(iso){ if(!iso) return "now"; const s=(Date.now()-new Date(iso).getTime())/1000;
+  if(s<60) return "now"; if(s<3600) return Math.floor(s/60)+"m"; if(s<86400) return Math.floor(s/3600)+"h";
+  if(s<604800) return Math.floor(s/86400)+"d"; return Math.floor(s/604800)+"w";
+}
 
+let ME = null;                       // my profile row {id, username, display_name, avatar_url, bio}
+const profiles = new Map();          // userId -> profile row
+function profOf(id){ return profiles.get(id) || { id, username:"someone", display_name:"Someone", avatar_url:null }; }
+function personShape(p){ return { id:p.id, name:p.display_name||p.username, handle:"@"+p.username, color:colorFor(p.id), initial:(p.display_name||p.username||"?").trim().charAt(0).toUpperCase(), avatarUrl:p.avatar_url||null }; }
+function avatarHTML(person, size){
+  const inner = person.avatarUrl ? `<img src="${person.avatarUrl}" alt="" style="width:100%;height:100%;object-fit:cover;" />` : person.initial;
+  return `<span class="avatar ${size||"md"}" style="background:${person.color}">${inner}</span>`;
+}
+async function ensureProfiles(ids){
+  const missing=[...new Set(ids)].filter(id=>id && !profiles.has(id));
+  if(!missing.length) return;
+  const { data } = await sb.from("reelio_profiles").select("*").in("id", missing);
+  (data||[]).forEach(p=>profiles.set(p.id, p));
+}
 
-
-let msgSeq = 100;
-function M(from, text, time, extra){ return Object.assign({ id:"m"+(++msgSeq), from, text, time, edited:false, reactions:{} }, extra||{}); }
-
-const CHATS = [];
-
-const WALLPAPERS = [
-  { id:"wp-none", name:"Plain" }, { id:"wp-teal", name:"Deep Teal" }, { id:"wp-sunset", name:"Sunset" },
-  { id:"wp-grid", name:"Grid" }, { id:"wp-dots", name:"Dots" }, { id:"wp-ocean", name:"Ocean" },
-];
-const QUICK_EMOJIS = ["❤️","😂","😮","😢","🔥","👍","🎉","👀"];
-
-/* ================= STATE ================= */
 const state = {
   view:"feed", feedTab:"foryou",
   liked:new Set(), saved:new Set(), following:new Set(),
   activeChatId:null, editingMsgId:null, commentVideoId:null,
   profileTab:"videos", myPosts:[], selectedPeople:new Set(),
 };
-const $ = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
+let VIDEOS = [];                     // post view-models
+let CHATS = [];                      // conversation view-models
+const WALLPAPERS = [
+  { id:"wp-none", name:"Plain" }, { id:"wp-teal", name:"Deep Teal" }, { id:"wp-sunset", name:"Sunset" },
+  { id:"wp-grid", name:"Grid" }, { id:"wp-dots", name:"Dots" }, { id:"wp-ocean", name:"Ocean" },
+];
+const wpLocal = {};                  // conversationId -> wallpaper id (this device/session only)
+const QUICK_EMOJIS = ["❤️","😂","😮","😢","🔥","👍","🎉","👀"];
 
-function fmt(n){ return n>=1000 ? (n/1000).toFixed(1).replace(/\.0$/,"")+"K" : ""+n; }
-function avatarHTML(person, size){ return `<span class="avatar ${size||"md"}" style="background:${person.color}">${person.initial}</span>`; }
-function personOf(key){ return key==="me" ? ME : PEOPLE[key]; }
-function displayName(chat, key){
-  if(key==="me") return "You";
-  const nick = (chat.nicknames||{})[key];
-  return nick || PEOPLE[key].name;
-}
 let toastTimer=null;
 function toast(msg){
   const t=$("#toast"); t.textContent=msg; t.classList.add("show");
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"), 2400);
 }
+
+/* ================= AUTH ================= */
+let authMode = "login";
+function setAuthMode(mode){
+  authMode = mode;
+  $("#tabLogin").classList.toggle("on", mode==="login");
+  $("#tabSignup").classList.toggle("on", mode==="signup");
+  $("#authNameField").style.display = mode==="signup" ? "" : "none";
+  $("#authUserField").style.display = mode==="signup" ? "" : "none";
+  $("#authSubmit").textContent = mode==="signup" ? "Create account" : "Log in";
+  $("#authPassword").setAttribute("autocomplete", mode==="signup" ? "new-password" : "current-password");
+  authError("");
+}
+function authError(msg){
+  const e=$("#authError");
+  e.textContent=msg||""; e.classList.toggle("show", !!msg);
+}
+$("#tabLogin").addEventListener("click", ()=>setAuthMode("login"));
+$("#tabSignup").addEventListener("click", ()=>setAuthMode("signup"));
+
+$("#authForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  if(!sb){ authError("Still offline — refresh the page once you're connected."); return; }
+  const email=$("#authEmail").value.trim(), password=$("#authPassword").value;
+  const btn=$("#authSubmit"); btn.disabled=true; authError("");
+  try{
+    if(authMode==="signup"){
+      const username=$("#authUsername").value.trim().toLowerCase().replace(/[^a-z0-9_.]/g,"");
+      const displayName=$("#authDisplayName").value.trim();
+      if(username.length<3) throw new Error("Pick a username of at least 3 characters (letters, numbers, _ or .).");
+      if(password.length<6) throw new Error("Password needs at least 6 characters.");
+      const { data: taken } = await sb.from("reelio_profiles").select("id").eq("username", username).maybeSingle();
+      if(taken) throw new Error("That username is taken — try another one.");
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if(error) throw error;
+      if(!data.user) throw new Error("Something went wrong signing up. Try again.");
+      if(!data.session) throw new Error("Account created — check your email to confirm, then log in.");
+      const { error: pErr } = await sb.from("reelio_profiles").insert({
+        id:data.user.id, username, display_name: displayName || username, bio:""
+      });
+      if(pErr) throw new Error(pErr.code==="23505" ? "That username is taken — try another one." : pErr.message);
+      await enterApp(data.user);
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+      await enterApp(data.user);
+    }
+  }catch(err){
+    authError(err.message || "Something went wrong. Try again.");
+  }finally{
+    btn.disabled=false;
+  }
+});
+
+async function fetchMyProfile(user){
+  let { data } = await sb.from("reelio_profiles").select("*").eq("id", user.id).maybeSingle();
+  if(!data){
+    // Account exists without a profile row (e.g. profile insert was interrupted) — create one.
+    let base=(user.email||"user").split("@")[0].toLowerCase().replace(/[^a-z0-9_.]/g,"").slice(0,20) || "user";
+    let username=base, tries=0;
+    while(tries<5){
+      const { error } = await sb.from("reelio_profiles").insert({ id:user.id, username, display_name:base, bio:"" });
+      if(!error) break;
+      tries++; username = base + Math.floor(100+Math.random()*900);
+    }
+    ({ data } = await sb.from("reelio_profiles").select("*").eq("id", user.id).maybeSingle());
+  }
+  return data;
+}
+
+let entered = false;
+async function enterApp(user){
+  if(entered) return;
+  const profile = await fetchMyProfile(user);
+  if(!profile){ authError("Couldn't load your profile. Try again."); return; }
+  entered = true;
+  ME = profile; profiles.set(ME.id, ME);
+  $("#authGate").classList.remove("show");
+  $("#bootSplash").classList.add("hide");
+  renderIdentity();
+  await loadFollows();
+  await Promise.all([loadPosts(), loadConversations()]);
+  renderStats(); renderProfileGrid();
+  subscribeRealtime(); subscribeCallChannel();
+}
+function renderIdentity(){
+  const me = personShape(ME);
+  $("#sideMeAvatar").innerHTML = avatarHTML(me, "sm");
+  $("#sideMeName").textContent = me.name;
+  $("#sideMeHandle").textContent = me.handle;
+  $("#profileAvatar").innerHTML = avatarHTML(me, "xl");
+  $("#profileName").textContent = me.name;
+  $("#profileHandle").textContent = me.handle;
+  $("#profileBio").textContent = ME.bio || "";
+  $("#profileBio").style.display = ME.bio ? "" : "none";
+  $("#commentAvatar").innerHTML = avatarHTML(me, "sm");
+}
+$("#signOutBtn").addEventListener("click", async ()=>{
+  await sb.auth.signOut();
+  location.reload();
+});
 
 /* ================= NAV ================= */
 function switchView(v){
@@ -726,14 +959,65 @@ function switchView(v){
 $$("[data-view]").forEach(b=>b.addEventListener("click", ()=>switchView(b.dataset.view)));
 $("#feedSearchBtn").addEventListener("click", ()=>switchView("discover"));
 
-/* ================= FEED ================= */
+/* ================= FEED / POSTS ================= */
 const heartSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.7C6 16.6 3 13.2 3 9.6 3 7 5 5 7.4 5c1.7 0 3.4 1 4.6 2.7C13.2 6 14.9 5 16.6 5 19 5 21 7 21 9.6c0 3.6-3 7-9 11.1z"/></svg>';
 const commentSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg>';
 const shareSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5.5 20 12l-7 6.5v-4C7 14.5 4.5 16.5 3 19c0-6 3.5-9.5 10-10z"/><path d="M13 5.5V9"/></svg>';
 const bookmarkSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12V21l-6-4-6 4z"/></svg>';
 
+function postVM(row, likeCount, commentCount){
+  const p = personShape(profOf(row.user_id));
+  return {
+    id: row.id, userId: row.user_id, mine: row.user_id === (ME && ME.id),
+    author: p.name, handle: p.handle, color: p.color, initial: p.initial, avatarUrl: p.avatarUrl,
+    type: row.media_type,
+    videoUrl: row.media_type === "video" ? row.media_url : null,
+    img: row.media_type === "photo" ? row.media_url : "",
+    caption: row.caption || "", tags: (row.tags || []).map(t => t.startsWith("#") ? t : "#" + t),
+    likes: likeCount || 0, commentCount: commentCount || 0,
+    comments: null, commentsLoaded: false, shares: 0, created_at: row.created_at
+  };
+}
+async function loadPosts(){
+  const { data: rows, error } = await sb.from("reelio_posts").select("*").order("created_at", { ascending:false }).limit(100);
+  if(error){ toast("Couldn't load posts"); return; }
+  await ensureProfiles(rows.map(r=>r.user_id));
+  const ids = rows.map(r=>r.id);
+  const likeCounts = {}, commentCounts = {};
+  if(ids.length){
+    const [{ data: likes }, { data: comments }] = await Promise.all([
+      sb.from("reelio_likes").select("post_id").in("post_id", ids),
+      sb.from("reelio_comments").select("post_id").in("post_id", ids)
+    ]);
+    (likes||[]).forEach(l=>{ likeCounts[l.post_id]=(likeCounts[l.post_id]||0)+1; });
+    (comments||[]).forEach(c=>{ commentCounts[c.post_id]=(commentCounts[c.post_id]||0)+1; });
+  }
+  VIDEOS = rows.map(r=>postVM(r, likeCounts[r.id], commentCounts[r.id]));
+  state.myPosts = VIDEOS.filter(v=>v.mine);
+  renderFeed(); renderThumbs(VIDEOS);
+}
+async function loadFollows(){
+  const [{ data: mine }, { data: myLikes }] = await Promise.all([
+    sb.from("reelio_follows").select("following_id").eq("follower_id", ME.id),
+    sb.from("reelio_likes").select("post_id").eq("user_id", ME.id)
+  ]);
+  state.following = new Set((mine||[]).map(f=>f.following_id));
+  state.liked = new Set((myLikes||[]).map(l=>l.post_id));
+}
+async function refreshPostCounts(postId){
+  const [{ count: lc }, { count: cc }] = await Promise.all([
+    sb.from("reelio_likes").select("*", { count:"exact", head:true }).eq("post_id", postId),
+    sb.from("reelio_comments").select("*", { count:"exact", head:true }).eq("post_id", postId)
+  ]);
+  const v = VIDEOS.find(x=>x.id===postId); if(!v) return;
+  v.likes = lc || 0; v.commentCount = cc || 0;
+  syncLikeUI(postId);
+  const cc2 = document.querySelector(`#feed [data-comments="${postId}"] span:last-child`);
+  if(cc2) cc2.textContent = fmt(v.commentCount);
+}
+
 function visibleVideos(){
-  if(state.feedTab==="following") return VIDEOS.filter(v=>state.following.has(v.handle) || v.mine);
+  if(state.feedTab==="following") return VIDEOS.filter(v=>state.following.has(v.userId) || v.mine);
   return VIDEOS;
 }
 function renderFeed(){
@@ -753,29 +1037,30 @@ function renderFeed(){
   }
   list.forEach(v=>{
     const reel=document.createElement("div"); reel.className="reel"; reel.dataset.id=v.id;
-    const liked=state.liked.has(v.id), saved=state.saved.has(v.id), following=state.following.has(v.handle);
-    const isPhoto = !v.videoUrl;
+    const liked=state.liked.has(v.id), saved=state.saved.has(v.id), following=state.following.has(v.userId);
+    const isPhoto = v.type==="photo";
     reel.innerHTML=`
       <div class="reel-card" data-card="${v.id}">
-        ${v.videoUrl ? `<video src="${v.videoUrl}" poster="${v.img||""}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loop muted playsinline></video>`
-                      : `<img class="poster" src="${v.img}" alt="Photo by ${v.author}: ${v.caption}" />`}
+        ${v.videoUrl ? `<video src="${v.videoUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loop muted playsinline></video>`
+                      : `<img class="poster" src="${v.img}" alt="Photo by ${esc(v.author)}" />`}
         <div class="reel-shade"></div>
         ${isPhoto ? "" : `<div class="paused-badge"><span><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg></span></div>`}
         <div class="big-heart"><svg viewBox="0 0 24 24"><path d="M12 20.7C6 16.6 3 13.2 3 9.6 3 7 5 5 7.4 5c1.7 0 3.4 1 4.6 2.7C13.2 6 14.9 5 16.6 5 19 5 21 7 21 9.6c0 3.6-3 7-9 11.1z"/></svg></div>
         <div class="reel-meta">
-          <div class="reel-author"><span>${v.handle}</span>${v.mine?"":`<button class="follow-chip ${following?"following":""}" data-follow="${v.handle}">${following?"Following":"Follow"}</button>`}</div>
-          <p class="reel-cap">${v.caption}</p>
-          <div class="reel-tags">${v.tags.map(t=>`<span>${t}</span>`).join("")}</div>
+          <div class="reel-author"><span>${esc(v.handle)}</span>${v.mine?"":`<button class="follow-chip ${following?"following":""}" data-follow="${v.userId}">${following?"Following":"Follow"}</button>`}</div>
+          <p class="reel-cap"></p>
+          <div class="reel-tags">${v.tags.map(t=>`<span>${esc(t)}</span>`).join("")}</div>
         </div>
         <div class="reel-rail">
-          <div class="rail-avatar">${avatarHTML(v,"md")}${v.mine?"":`<span class="plus ${following?"done":""}" data-follow="${v.handle}">${following?"✓":"+"}</span>`}</div>
-          <button class="rail-btn ${liked?"liked":""}" data-like="${v.id}"><span class="ic">${heartSVG}</span><span data-likecount="${v.id}">${fmt(v.likes + (liked?1:0))}</span></button>
-          <button class="rail-btn" data-comments="${v.id}"><span class="ic">${commentSVG}</span><span>${fmt(v.comments.length)}</span></button>
+          <div class="rail-avatar">${avatarHTML(v,"md")}${v.mine?"":`<span class="plus ${following?"done":""}" data-follow="${v.userId}">${following?"✓":"+"}</span>`}</div>
+          <button class="rail-btn ${liked?"liked":""}" data-like="${v.id}"><span class="ic">${heartSVG}</span><span data-likecount="${v.id}">${fmt(v.likes)}</span></button>
+          <button class="rail-btn" data-comments="${v.id}"><span class="ic">${commentSVG}</span><span>${fmt(v.commentCount)}</span></button>
           <button class="rail-btn ${saved?"saved":""}" data-save="${v.id}"><span class="ic">${bookmarkSVG}</span><span>${saved?"Saved":"Save"}</span></button>
           <button class="rail-btn" data-share="${v.id}"><span class="ic">${shareSVG}</span><span>${v.shares}</span></button>
         </div>
         ${isPhoto ? "" : `<div class="reel-progress"><i></i></div>`}
       </div>`;
+    reel.querySelector(".reel-cap").textContent = v.caption;
     feed.appendChild(reel);
   });
   bindFeedEvents(); observeReels();
@@ -802,24 +1087,29 @@ function togglePlay(card){
   if(vid){ playing ? vid.play().catch(()=>{}) : vid.pause(); }
 }
 function likeWithHeart(id, card, e){
-  if(!state.liked.has(id)){ state.liked.add(id); syncLikeUI(id); }
+  if(!state.liked.has(id)){ toggleLike(id); }
   const heart=card.querySelector(".big-heart");
   const rect=card.getBoundingClientRect();
   const x=(e.clientX? e.clientX-rect.left : rect.width/2)-46, y=(e.clientY? e.clientY-rect.top : rect.height/2)-46;
   heart.style.left=x+"px"; heart.style.top=y+"px";
   heart.classList.remove("pop"); void heart.offsetWidth; heart.classList.add("pop");
 }
-function toggleLike(id){
-  state.liked.has(id) ? state.liked.delete(id) : state.liked.add(id);
-  syncLikeUI(id);
+async function toggleLike(id){
+  const v=VIDEOS.find(x=>x.id===id); if(!v) return;
+  if(state.liked.has(id)){
+    state.liked.delete(id); v.likes=Math.max(0, v.likes-1); syncLikeUI(id);
+    await sb.from("reelio_likes").delete().eq("user_id", ME.id).eq("post_id", id);
+  } else {
+    state.liked.add(id); v.likes+=1; syncLikeUI(id);
+    await sb.from("reelio_likes").insert({ user_id: ME.id, post_id: id });
+  }
 }
 function syncLikeUI(id){
   const v=VIDEOS.find(x=>x.id===id); if(!v) return;
   const liked=state.liked.has(id);
   $$(`#feed [data-like="${id}"]`).forEach(b=>b.classList.toggle("liked", liked));
-  $$(`[data-likecount="${id}"]`).forEach(el=>el.textContent=fmt(v.likes + (liked?1:0)));
+  $$(`[data-likecount="${id}"]`).forEach(el=>el.textContent=fmt(v.likes));
   renderStats();
-  if(state.view==="profile") renderProfileGrid();
 }
 function toggleSave(id){
   const on=!state.saved.has(id);
@@ -827,12 +1117,14 @@ function toggleSave(id){
   $$(`#feed [data-save="${id}"]`).forEach(b=>{ b.classList.toggle("saved", on); b.lastElementChild.textContent=on?"Saved":"Save"; });
   toast(on?"Saved to your profile":"Removed from saved");
 }
-function toggleFollow(handle){
-  const on=!state.following.has(handle);
-  on ? state.following.add(handle) : state.following.delete(handle);
+async function toggleFollow(userId){
+  if(!userId || userId===ME.id) return;
+  const on=!state.following.has(userId);
+  on ? state.following.add(userId) : state.following.delete(userId);
   renderFeed(); renderStats();
-  toast(on?`Following ${handle}`:`Unfollowed ${handle}`);
-  if(state.view==="profile") renderProfileGrid();
+  toast(on?`Following ${profOf(userId).username ? "@"+profOf(userId).username : "them"}`:"Unfollowed");
+  if(on) await sb.from("reelio_follows").insert({ follower_id: ME.id, following_id: userId });
+  else await sb.from("reelio_follows").delete().eq("follower_id", ME.id).eq("following_id", userId);
 }
 let reelObserver=null;
 function observeReels(){
@@ -865,7 +1157,7 @@ $$("[data-feedtab]").forEach(b=>b.addEventListener("click", ()=>{
   state.feedTab=b.dataset.feedtab; renderFeed(); $("#feed").scrollTop=0;
 }));
 
-/* ================= COMMENTS ================= */
+/* ================= SHEETS ================= */
 function openSheet(id){
   $("#scrim").classList.add("show");
   $$(".sheet").forEach(s=>s.classList.remove("show"));
@@ -876,40 +1168,47 @@ $("#scrim").addEventListener("click", closeSheets);
 $$("[data-close]").forEach(b=>b.addEventListener("click", closeSheets));
 document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeSheets(); hidePopups(); } });
 
-function openComments(id){
+/* ================= COMMENTS ================= */
+async function openComments(id){
   state.commentVideoId=id;
-  const v=VIDEOS.find(x=>x.id===id);
+  const v=VIDEOS.find(x=>x.id===id); if(!v) return;
+  $("#commentsTitle").textContent="Comments";
+  $("#commentList").innerHTML='<p class="empty-note" style="text-align:center; padding:18px 0;">Loading…</p>';
+  openSheet("commentsSheet");
+  const { data } = await sb.from("reelio_comments").select("*").eq("post_id", id).order("created_at", { ascending:true });
+  await ensureProfiles((data||[]).map(c=>c.user_id));
+  v.comments=(data||[]).map(c=>({ id:c.id, who:c.user_id, text:c.content, time:relTime(c.created_at) }));
+  v.commentsLoaded=true;
   $("#commentsTitle").textContent= v.comments.length ? `Comments · ${fmt(v.comments.length)}` : "Comments";
-  renderComments(); openSheet("commentsSheet");
+  renderComments();
   setTimeout(()=>$("#commentInput").focus(), 80);
 }
 function renderComments(){
   const v=VIDEOS.find(x=>x.id===state.commentVideoId);
   const list=$("#commentList"); list.innerHTML="";
-  if(!v.comments.length){
+  if(!v || !v.comments || !v.comments.length){
     list.innerHTML='<p class="empty-note" style="text-align:center; padding:18px 0;">No comments yet — be the first to say something.</p>';
     return;
   }
-  v.comments.forEach((c,i)=>{
-    const p=personOf(c.who);
+  v.comments.forEach(c=>{
+    const p=personShape(profOf(c.who));
     const row=document.createElement("div"); row.className="comment";
-    row.innerHTML=`${avatarHTML(p,"sm")}<div class="c-main"><b>${p.handle}</b><p></p><span>${c.time} ago</span></div>
-      <button class="c-like ${c.likedByMe?"liked":""}" data-clike="${i}">${heartSVG}<span>${fmt(c.likes + (c.likedByMe?1:0))}</span></button>`;
+    row.innerHTML=`${avatarHTML(p,"sm")}<div class="c-main"><b>${esc(p.handle)}</b><p></p><span>${c.time} ago</span></div>`;
     row.querySelector("p").textContent=c.text;
     list.appendChild(row);
   });
-  $$("#commentList [data-clike]").forEach(b=>b.addEventListener("click", ()=>{
-    const c=v.comments[+b.dataset.clike]; c.likedByMe=!c.likedByMe; renderComments();
-  }));
 }
-$("#commentForm").addEventListener("submit", e=>{
+$("#commentForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const input=$("#commentInput"); const text=input.value.trim(); if(!text) return;
-  const v=VIDEOS.find(x=>x.id===state.commentVideoId);
-  v.comments.push({who:"me", text, likes:0, time:"now"});
-  $("#commentsTitle").textContent=`Comments · ${fmt(v.comments.length)}`;
-  input.value=""; autoGrow(input); renderComments();
-  $("#commentList").scrollTop=1e6;
+  const v=VIDEOS.find(x=>x.id===state.commentVideoId); if(!v) return;
+  const { data, error } = await sb.from("reelio_comments").insert({ post_id:v.id, user_id:ME.id, content:text }).select().single();
+  if(error){ toast("Couldn't post that comment"); return; }
+  input.value=""; autoGrow(input);
+  if(v.commentsLoaded){ v.comments.push({ id:data.id, who:ME.id, text, time:"now" }); renderComments(); $("#commentList").scrollTop=1e6; }
+  v.commentCount+=1;
+  const cc=document.querySelector(`#feed [data-comments="${v.id}"] span:last-child`); if(cc) cc.textContent=fmt(v.commentCount);
+  $("#commentsTitle").textContent=`Comments · ${fmt(v.commentCount)}`;
   toast("Comment posted");
 });
 
@@ -923,7 +1222,7 @@ function renderThumbs(list){
   const grid=$("#thumbGrid"); grid.innerHTML="";
   list.forEach(v=>{
     const b=document.createElement("button"); b.className="thumb"; b.dataset.thumb=v.id;
-    b.innerHTML=`${thumbMedia(v, "Post by "+v.author)}<div class="t-meta"><b></b><span>${heartSVG}${fmt(v.likes)}</span></div>`;
+    b.innerHTML=`${thumbMedia(v, "Post by "+esc(v.author))}<div class="t-meta"><b></b><span>${heartSVG}${fmt(v.likes)}</span></div>`;
     b.querySelector("b").textContent=v.caption;
     b.addEventListener("click", ()=>{ switchView("feed"); state.feedTab="foryou"; $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou")); renderFeed();
       requestAnimationFrame(()=>{ const el=$(`#feed .reel[data-id="${v.id}"]`); if(el) el.scrollIntoView(); }); });
@@ -936,18 +1235,43 @@ function renderThumbs(list){
     empty.textContent = q ? "Nothing matches that search." : "Nothing here at the moment.";
   }
 }
-function filterDiscover(){
-  const q=$("#discoverSearch").value.trim().toLowerCase();
-  if(!q){ renderThumbs(VIDEOS); return; }
-  renderThumbs(VIDEOS.filter(v=> v.caption.toLowerCase().includes(q) || v.author.toLowerCase().includes(q) || v.handle.toLowerCase().includes(q) || v.tags.some(t=>t.toLowerCase().includes(q))));
+async function searchPeople(q){
+  const section=$("#peopleSection"), box=$("#peopleResults");
+  if(!q){ section.style.display="none"; box.innerHTML=""; return; }
+  const { data } = await sb.from("reelio_profiles").select("*")
+    .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`).neq("id", ME.id).limit(8);
+  (data||[]).forEach(p=>profiles.set(p.id, p));
+  if(!data || !data.length){ section.style.display="none"; box.innerHTML=""; return; }
+  section.style.display=""; box.innerHTML="";
+  data.forEach(p=>{
+    const person=personShape(p);
+    const row=document.createElement("div"); row.className="nick-row";
+    row.innerHTML=`${avatarHTML(person,"sm")}<div class="who"><b>${esc(person.name)}</b><span>${esc(person.handle)}</span></div>`;
+    const msg=document.createElement("button"); msg.className="btn btn-teal"; msg.style.padding="7px 14px"; msg.style.fontSize="13.5px"; msg.textContent="Message";
+    msg.addEventListener("click", ()=>startDM(p.id));
+    const fol=document.createElement("button"); fol.className="btn "+(state.following.has(p.id)?"btn-ghost":"btn-teal"); fol.style.padding="7px 14px"; fol.style.fontSize="13.5px";
+    fol.textContent=state.following.has(p.id)?"Following":"Follow";
+    fol.addEventListener("click", async ()=>{ await toggleFollow(p.id); fol.textContent=state.following.has(p.id)?"Following":"Follow"; fol.className="btn "+(state.following.has(p.id)?"btn-ghost":"btn-teal"); });
+    row.appendChild(fol); row.appendChild(msg); box.appendChild(row);
+  });
 }
-$("#discoverSearch").addEventListener("input", filterDiscover);
+let discoverTimer=null;
+$("#discoverSearch").addEventListener("input", ()=>{
+  const q=$("#discoverSearch").value.trim().toLowerCase();
+  if(!q){ renderThumbs(VIDEOS); $("#peopleSection").style.display="none"; return; }
+  renderThumbs(VIDEOS.filter(v=> v.caption.toLowerCase().includes(q) || v.author.toLowerCase().includes(q) || v.handle.toLowerCase().includes(q) || v.tags.some(t=>t.toLowerCase().includes(q))));
+  clearTimeout(discoverTimer); discoverTimer=setTimeout(()=>searchPeople(q), 250);
+});
 
 /* ================= PROFILE ================= */
-function renderStats(){
-  $("#statFollowing").textContent=fmt(state.following.size);
-  $("#statFollowers").textContent="0";
-  $("#statLikes").textContent=fmt(state.myPosts.reduce((sum,v)=>sum + v.likes + (state.liked.has(v.id)?1:0), 0));
+async function renderStats(){
+  const [{ count: following }, { count: followers }] = await Promise.all([
+    sb.from("reelio_follows").select("*", { count:"exact", head:true }).eq("follower_id", ME.id),
+    sb.from("reelio_follows").select("*", { count:"exact", head:true }).eq("following_id", ME.id)
+  ]);
+  $("#statFollowing").textContent=fmt(following||0);
+  $("#statFollowers").textContent=fmt(followers||0);
+  $("#statLikes").textContent=fmt(state.myPosts.reduce((sum,v)=>sum+v.likes, 0));
 }
 function renderProfileGrid(){
   const grid=$("#profileGrid"); grid.innerHTML="";
@@ -961,7 +1285,7 @@ function renderProfileGrid(){
   }
   list.forEach(v=>{
     const b=document.createElement("button"); b.className="thumb";
-    b.innerHTML=`${thumbMedia(v, "Post: "+v.caption)}<div class="t-meta"><b></b><span>${heartSVG}${fmt(v.likes)}</span></div>`;
+    b.innerHTML=`${thumbMedia(v, "Post: "+esc(v.caption))}<div class="t-meta"><b></b><span>${heartSVG}${fmt(v.likes)}</span></div>`;
     b.querySelector("b").textContent=v.caption;
     b.addEventListener("click", ()=>{ switchView("feed"); state.feedTab="foryou"; $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou")); renderFeed();
       requestAnimationFrame(()=>{ const el=$(`#feed .reel[data-id="${v.id}"]`); if(el) el.scrollIntoView(); }); });
@@ -972,16 +1296,45 @@ $$("[data-ptab]").forEach(b=>b.addEventListener("click", ()=>{
   $$("[data-ptab]").forEach(x=>x.classList.remove("on")); b.classList.add("on");
   state.profileTab=b.dataset.ptab; renderProfileGrid();
 }));
-$("#editProfileBtn").addEventListener("click", ()=>openSheet("profileSheet"));
-$("#profileSave").addEventListener("click", ()=>{
-  const name=$("#profName").value.trim()||"Liam";
-  document.querySelector(".profile-id h1").firstChild.textContent=name+" ";
-  $(".profile-bio").textContent=$("#profBio").value.trim();
+let pendingAvatarFile=null;
+$("#editProfileBtn").addEventListener("click", ()=>{
+  pendingAvatarFile=null;
+  $("#profName").value=ME.display_name||"";
+  $("#profUsername").value=ME.username||"";
+  $("#profBio").value=ME.bio||"";
+  $("#editAvatarPreview").innerHTML=avatarHTML(personShape(ME), "md");
+  openSheet("profileSheet");
+});
+$("#avatarChangeBtn").addEventListener("click", ()=>$("#avatarFile").click());
+$("#avatarFile").addEventListener("change", e=>{
+  const f=e.target.files[0]; e.target.value="";
+  if(!f) return;
+  pendingAvatarFile=f;
+  $("#editAvatarPreview").innerHTML=`<span class="avatar md"><img src="${URL.createObjectURL(f)}" alt="" style="width:100%;height:100%;object-fit:cover;" /></span>`;
+});
+$("#profileSave").addEventListener("click", async ()=>{
+  const name=$("#profName").value.trim();
+  const username=$("#profUsername").value.trim().toLowerCase().replace(/[^a-z0-9_.]/g,"");
+  const bio=$("#profBio").value.trim();
+  if(username.length<3){ toast("Username needs at least 3 characters"); return; }
+  let avatarUrl=ME.avatar_url;
+  if(pendingAvatarFile){
+    const path=`avatars/${ME.id}-${Date.now()}`;
+    const { error: upErr } = await sb.storage.from("reelio-media").upload(path, pendingAvatarFile, { upsert:true });
+    if(upErr){ toast("Photo upload failed"); return; }
+    avatarUrl=sb.storage.from("reelio-media").getPublicUrl(path).data.publicUrl;
+  }
+  const { error } = await sb.from("reelio_profiles").update({ display_name:name||ME.display_name, username, bio, avatar_url:avatarUrl }).eq("id", ME.id);
+  if(error){ toast(error.code==="23505" ? "That username is taken" : "Couldn't save profile"); return; }
+  ME={ ...ME, display_name:name||ME.display_name, username, bio, avatar_url:avatarUrl };
+  profiles.set(ME.id, ME);
+  pendingAvatarFile=null;
+  renderIdentity(); await loadPosts();
   closeSheets(); toast("Profile updated");
 });
 
 /* ================= CREATE POST ================= */
-let uploadURL=null, uploadType=null;
+let uploadURL=null, uploadType=null, uploadFile=null;
 function openUpload(){ openSheet("uploadSheet"); }
 $("#sideUpload").addEventListener("click", openUpload);
 $("#mobileUpload").addEventListener("click", openUpload);
@@ -992,6 +1345,7 @@ $$("[data-pick]").forEach(b=>b.addEventListener("click", ()=>{ $("#"+b.dataset.p
     const f=e.target.files[0]; e.target.value="";
     if(!f) return;
     if(uploadURL) URL.revokeObjectURL(uploadURL);
+    uploadFile=f;
     uploadURL=URL.createObjectURL(f);
     uploadType=f.type.startsWith("video") ? "video" : "photo";
     const prev=$("#uploadPreview"); prev.classList.add("show");
@@ -1004,50 +1358,112 @@ $$("[data-pick]").forEach(b=>b.addEventListener("click", ()=>{ $("#"+b.dataset.p
 });
 function resetUploadPicker(){
   if(uploadURL) URL.revokeObjectURL(uploadURL);
-  uploadURL=null; uploadType=null;
+  uploadURL=null; uploadType=null; uploadFile=null;
   const prev=$("#uploadPreview"); prev.classList.remove("show"); prev.innerHTML="";
   $("#pickGrid").style.display="grid";
   $("#pickChange").classList.remove("show");
 }
 $("#pickChange").addEventListener("click", resetUploadPicker);
-$("#uploadPost").addEventListener("click", ()=>{
-  if(!uploadURL || !uploadType){ toast("Pick a photo or video first"); return; }
-  const caption=$("#uploadCaption").value.trim() || "Fresh off the camera roll.";
-  const tags=$("#uploadTags").value.split(",").map(t=>t.trim()).filter(Boolean).map(t=>t.startsWith("#")?t:"#"+t.replace(/\s+/g,""));
-  const v={ id:"mine"+Date.now(), type:uploadType, img: uploadType==="photo"? uploadURL : "", videoUrl: uploadType==="video"? uploadURL : null,
-    author:"Liam", handle:"@hoopslimbo", color:"#0e7a6c", initial:"L", mine:true,
-    caption, tags: tags.length? tags : ["#myreelio"], likes:0, comments:[], shares:"0" };
-  VIDEOS.unshift(v); state.myPosts.unshift(v);
-  uploadURL=null; uploadType=null;
-  const prev=$("#uploadPreview"); prev.classList.remove("show"); prev.innerHTML="";
-  $("#pickGrid").style.display="grid"; $("#pickChange").classList.remove("show");
-  $("#uploadCaption").value=""; $("#uploadTags").value="";
-  closeSheets(); switchView("feed"); state.feedTab="foryou";
-  $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou"));
-  renderFeed(); $("#feed").scrollTop=0; renderProfileGrid(); renderStats(); renderThumbs(VIDEOS);
-  toast("Posted — it's at the top of your feed");
+$("#uploadPost").addEventListener("click", async ()=>{
+  if(!uploadFile || !uploadType){ toast("Pick a photo or video first"); return; }
+  const btn=$("#uploadPost"); btn.disabled=true; btn.textContent="Posting…";
+  try{
+    const ext=(uploadFile.name.split(".").pop()||(uploadType==="video"?"mp4":"jpg")).toLowerCase();
+    const path=`posts/${ME.id}/${Date.now()}.${ext}`;
+    const { error: upErr } = await sb.storage.from("reelio-media").upload(path, uploadFile);
+    if(upErr) throw upErr;
+    const mediaUrl=sb.storage.from("reelio-media").getPublicUrl(path).data.publicUrl;
+    const caption=$("#uploadCaption").value.trim() || "Fresh off the camera roll.";
+    const tags=$("#uploadTags").value.split(",").map(t=>t.trim().replace(/^#/, "")).filter(Boolean);
+    const { data, error } = await sb.from("reelio_posts").insert({
+      user_id: ME.id, media_url: mediaUrl, media_type: uploadType, caption, tags
+    }).select().single();
+    if(error) throw error;
+    const v=postVM(data, 0, 0);
+    VIDEOS.unshift(v); state.myPosts.unshift(v);
+    resetUploadPicker();
+    $("#uploadCaption").value=""; $("#uploadTags").value="";
+    closeSheets(); switchView("feed"); state.feedTab="foryou";
+    $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou"));
+    renderFeed(); $("#feed").scrollTop=0; renderProfileGrid(); renderStats(); renderThumbs(VIDEOS);
+    toast("Posted — it's live at the top of the feed");
+  }catch(err){
+    toast("Post failed — try again");
+  }finally{
+    btn.disabled=false; btn.textContent="Post";
+  }
 });
 
 /* ================= INBOX / CHATS ================= */
 function activeChat(){ return CHATS.find(c=>c.id===state.activeChatId); }
+function otherMembers(chat){ return chat.memberIds.filter(id=>id!==ME.id); }
+function chatDisplayName(chat){
+  if(chat.isGroup) return chat.name || "Group chat";
+  const other=otherMembers(chat)[0];
+  return other ? (chat.nicknames[other] || profOf(other).display_name || profOf(other).username) : "Chat";
+}
+function displayName(chat, userId){
+  if(userId===ME.id) return "You";
+  return (chat.nicknames && chat.nicknames[userId]) || profOf(userId).display_name || profOf(userId).username;
+}
 function lastMsg(chat){ return chat.messages[chat.messages.length-1]; }
 function chatPreview(chat){
   const m=lastMsg(chat); if(!m) return "Say hi 👋";
-  const who = m.from==="me" ? "You" : displayName(chat, m.from);
+  const who = m.from===ME.id ? "You" : displayName(chat, m.from);
   return `${who}: ${m.text}`;
 }
 function chatAvatarHTML(chat, size){
-  if(chat.type==="dm"){ return avatarHTML(PEOPLE[chat.members[0]], size); }
-  return `<span class="avatar-wrap">${avatarHTML({color:"#0b7a6e", initial:chat.name.split(" ").map(w=>w[0]).slice(0,2).join("")}, size)}<span class="group-badge"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="10" r="2.4"/><path d="M3.5 19c.8-3 3-4.2 5.5-4.2S13.7 16 14.5 19zM14.8 15.4c2.3.2 4 1.3 4.7 3.6h-3.4c-.3-1.5-.8-2.7-1.3-3.6z"/></svg></span></span>`;
+  if(!chat.isGroup){
+    const other=otherMembers(chat)[0];
+    return avatarHTML(personShape(profOf(other)), size);
+  }
+  const initials=(chat.name||"G").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+  return `<span class="avatar-wrap">${avatarHTML({color:"#0b7a6e", initial:initials, avatarUrl:null}, size)}<span class="group-badge"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="10" r="2.4"/><path d="M3.5 19c.8-3 3-4.2 5.5-4.2S13.7 16 14.5 19zM14.8 15.4c2.3.2 4 1.3 4.7 3.6h-3.4c-.3-1.5-.8-2.7-1.3-3.6z"/></svg></span></span>`;
+}
+function msgVM(row, reactions){
+  return { id:row.id, from:row.sender_id, text:row.content||"", mediaUrl:row.media_url||null,
+    created_at:row.created_at, time:clockTime(row.created_at), edited:!!row.edited_at, reactions:reactions||{} };
+}
+async function loadConversations(){
+  const { data: myMems } = await sb.from("reelio_conversation_members").select("conversation_id").eq("user_id", ME.id);
+  const convIds=(myMems||[]).map(m=>m.conversation_id);
+  if(!convIds.length){ CHATS=[]; renderChatList(); return; }
+  const [{ data: convs }, { data: mems }] = await Promise.all([
+    sb.from("reelio_conversations").select("*").in("id", convIds),
+    sb.from("reelio_conversation_members").select("*").in("conversation_id", convIds)
+  ]);
+  await ensureProfiles((mems||[]).map(m=>m.user_id));
+  const byConv={};
+  (mems||[]).forEach(m=>{ (byConv[m.conversation_id]=byConv[m.conversation_id]||[]).push(m); });
+  CHATS=(convs||[]).map(c=>{
+    const members=byConv[c.id]||[];
+    const nicknames={};
+    members.forEach(m=>{ if(m.nickname) nicknames[m.user_id]=m.nickname; });
+    return { id:c.id, isGroup:!!c.is_group, name:c.name, created_at:c.created_at,
+      memberIds:members.map(m=>m.user_id), nicknames, wallpaper:wpLocal[c.id]||"wp-none",
+      unread:0, messages:[], messagesLoaded:false };
+  });
+  // Last message per conversation for previews
+  const { data: recent } = await sb.from("reelio_messages").select("*").in("conversation_id", convIds)
+    .order("created_at", { ascending:false }).limit(300);
+  (recent||[]).slice().reverse().forEach(row=>{
+    const chat=CHATS.find(c=>c.id===row.conversation_id);
+    if(chat) chat.messages.push(msgVM(row));
+  });
+  CHATS.sort((a,b)=>{
+    const la=lastMsg(a), lb=lastMsg(b);
+    return new Date((lb&&lb.created_at)||b.created_at) - new Date((la&&la.created_at)||a.created_at);
+  });
+  renderChatList();
 }
 function renderChatList(){
   const q=($("#chatSearch").value||"").toLowerCase();
   const box=$("#chatItems"); box.innerHTML="";
-  CHATS.filter(c=>c.name.toLowerCase().includes(q) || chatPreview(c).toLowerCase().includes(q)).forEach(chat=>{
+  CHATS.filter(c=>chatDisplayName(c).toLowerCase().includes(q) || chatPreview(c).toLowerCase().includes(q)).forEach(chat=>{
     const m=lastMsg(chat);
     const item=document.createElement("button"); item.className="chat-item"+(chat.id===state.activeChatId?" active":"");
     item.innerHTML=`${chatAvatarHTML(chat,"md")}<div class="ci-main"><div class="ci-top"><b></b><time>${m? m.time:""}</time></div><div class="ci-sub"></div></div>${chat.unread?`<span class="unread">${chat.unread}</span>`:""}`;
-    item.querySelector("b").textContent=chat.name;
+    item.querySelector("b").textContent=chatDisplayName(chat);
     item.querySelector(".ci-sub").textContent=chatPreview(chat);
     item.addEventListener("click", ()=>openChat(chat.id));
     box.appendChild(item);
@@ -1062,14 +1478,29 @@ function renderChatList(){
 }
 $("#chatSearch").addEventListener("input", renderChatList);
 
-function openChat(id){
+async function loadMessages(chat){
+  const { data } = await sb.from("reelio_messages").select("*").eq("conversation_id", chat.id)
+    .order("created_at", { ascending:true }).limit(300);
+  const msgs=data||[];
+  const reactions={};
+  if(msgs.length){
+    const { data: rx } = await sb.from("reelio_reactions").select("*").in("message_id", msgs.map(m=>m.id));
+    (rx||[]).forEach(r=>{ ((reactions[r.message_id]=reactions[r.message_id]||{})[r.emoji]=reactions[r.message_id][r.emoji]||[]).push(r.user_id); });
+  }
+  chat.messages=msgs.map(row=>msgVM(row, reactions[row.id]));
+  chat.messagesLoaded=true;
+}
+async function openChat(id){
   state.activeChatId=id; state.editingMsgId=null;
-  const chat=activeChat(); chat.unread=0;
+  const chat=activeChat(); if(!chat) return;
+  chat.unread=0;
   $("#threadEmpty").style.display="none";
-  const live=$("#threadLive"); live.style.display="flex";
+  $("#threadLive").style.display="flex";
   $("#inboxWrap").classList.add("thread-open");
   $("#threadAvatar").innerHTML=chatAvatarHTML(chat,"md");
-  renderThreadHead(); renderMessages(); renderChatList();
+  renderThreadHead(); renderChatList();
+  if(!chat.messagesLoaded){ await loadMessages(chat); if(state.activeChatId!==id) return; }
+  renderMessages();
   setTimeout(()=>$("#composerInput").focus(), 60);
 }
 $("#threadBack").addEventListener("click", ()=>{
@@ -1078,10 +1509,11 @@ $("#threadBack").addEventListener("click", ()=>{
 });
 function renderThreadHead(){
   const chat=activeChat(); if(!chat) return;
-  $("#threadName").textContent=chat.name;
-  $("#threadSub").textContent= chat.type==="dm"
-    ? `${displayName(chat, chat.members[0])} · ${PEOPLE[chat.members[0]].handle}`
-    : `${chat.members.length+1} people · ${chat.members.map(k=>displayName(chat,k)).join(", ")}, You`;
+  $("#threadName").textContent=chatDisplayName(chat);
+  $("#threadSub").textContent= chat.isGroup
+    ? `${chat.memberIds.length} people · ${otherMembers(chat).map(id=>displayName(chat,id)).join(", ")}, You`
+    : (()=>{ const o=otherMembers(chat)[0]; const p=profOf(o); return `${displayName(chat,o)} · @${p.username}`; })();
+  $("#threadCallBtns").style.display = chat.isGroup ? "none" : "flex";
 }
 function renderMessages(){
   const chat=activeChat(); if(!chat) return;
@@ -1090,19 +1522,21 @@ function renderMessages(){
   box.innerHTML=`<div class="day-chip">Today</div>`;
   let lastFrom=null;
   chat.messages.forEach(m=>{
-    const person=personOf(m.from);
+    const mine=m.from===ME.id;
+    const person=personShape(profOf(m.from));
     const row=document.createElement("div");
-    row.className="msg-row "+(m.from==="me"?"me":"them"); row.dataset.msg=m.id;
-    const showName = chat.type==="group" && m.from!=="me" && lastFrom!==m.from;
+    row.className="msg-row "+(mine?"me":"them"); row.dataset.msg=m.id;
+    const showName = chat.isGroup && !mine && lastFrom!==m.from;
     const reactionHTML = Object.keys(m.reactions).length ? `<div class="reactions">${Object.entries(m.reactions).map(([emoji,who])=>{
-        const mine=who.includes("Liam")||who.includes("You");
-        return `<button class="reaction-chip ${mine?"mine":""}" data-react-chip="${m.id}|${emoji}">${emoji}${who.length>1?`<small>${who.length}</small>`:""}</button>`;
+        const mineR=who.includes(ME.id);
+        return `<button class="reaction-chip ${mineR?"mine":""}" data-react-chip="${m.id}|${emoji}">${emoji}${who.length>1?`<small>${who.length}</small>`:""}</button>`;
       }).join("")}</div>` : "";
     row.innerHTML=`
-      ${m.from!=="me" ? avatarHTML(person,"sm") : ""}
+      ${!mine ? avatarHTML(person,"sm") : ""}
       <div class="msg-stack">
-        ${showName?`<div class="sender-name">${displayName(chat, m.from)}</div>`:""}
-        <div class="bubble"><span class="bubble-text"></span>${m.edited?'<span class="edited-tag">edited</span>':""}</div>
+        ${showName?`<div class="sender-name">${esc(displayName(chat, m.from))}</div>`:""}
+        ${m.mediaUrl?`<img class="msg-media" src="${m.mediaUrl}" alt="Shared photo" />`:""}
+        ${m.text?`<div class="bubble"><span class="bubble-text"></span>${m.edited?'<span class="edited-tag">edited</span>':""}</div>`:""}
         ${reactionHTML}
         <div class="msg-meta"><span>${m.time}</span></div>
       </div>
@@ -1110,11 +1544,10 @@ function renderMessages(){
         <button data-act="react" data-id="${m.id}" aria-label="React"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.2 1.8 3.5 1.8 3.5-1.8 3.5-1.8"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="3"/></svg></button>
         <button data-act="menu" data-id="${m.id}" aria-label="Message options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
       </div>`;
-    row.querySelector(".bubble-text").textContent=m.text;
+    const bt=row.querySelector(".bubble-text"); if(bt) bt.textContent=m.text;
     box.appendChild(row);
     lastFrom=m.from;
   });
-  // wire actions
   box.querySelectorAll("[data-act]").forEach(b=>b.addEventListener("click", e=>{
     e.stopPropagation();
     const id=b.dataset.id;
@@ -1122,10 +1555,10 @@ function renderMessages(){
     else showMsgMenu(id, b);
   }));
   box.querySelectorAll("[data-react-chip]").forEach(b=>b.addEventListener("click", ()=>{
-    const [mid, emoji]=b.dataset.reactChip.split("|"); toggleReaction(mid, emoji);
+    const i=b.dataset.reactChip.indexOf("|");
+    toggleReaction(b.dataset.reactChip.slice(0,i), b.dataset.reactChip.slice(i+1));
   }));
-  // double-tap / double-click to heart
-  box.querySelectorAll(".bubble").forEach(bub=>{
+  box.querySelectorAll(".bubble, .msg-media").forEach(bub=>{
     let lastTap=0;
     bub.addEventListener("click", ()=>{
       const now=Date.now();
@@ -1135,14 +1568,22 @@ function renderMessages(){
   });
   box.scrollTop=box.scrollHeight;
 }
-function findMsg(id){ const chat=activeChat(); return chat.messages.find(m=>m.id===id); }
-function toggleReaction(msgId, emoji, onlyAdd){
-  const m=findMsg(msgId); if(!m) return;
+function findMsg(id){ const chat=activeChat(); return chat ? chat.messages.find(m=>m.id===id) : null; }
+async function toggleReaction(msgId, emoji, onlyAdd){
+  const chat=activeChat(); const m=findMsg(msgId); if(!m) return;
   m.reactions[emoji]=m.reactions[emoji]||[];
-  const i=m.reactions[emoji].indexOf("Liam");
-  if(i>=0){ if(!onlyAdd){ m.reactions[emoji].splice(i,1); if(!m.reactions[emoji].length) delete m.reactions[emoji]; } }
-  else m.reactions[emoji].push("Liam");
-  hidePopups(); renderMessages();
+  const i=m.reactions[emoji].indexOf(ME.id);
+  hidePopups();
+  if(i>=0){
+    if(onlyAdd){ renderMessages(); return; }
+    m.reactions[emoji].splice(i,1); if(!m.reactions[emoji].length) delete m.reactions[emoji];
+    renderMessages();
+    await sb.from("reelio_reactions").delete().eq("message_id", msgId).eq("user_id", ME.id).eq("emoji", emoji);
+  } else {
+    m.reactions[emoji].push(ME.id);
+    renderMessages();
+    await sb.from("reelio_reactions").insert({ message_id: msgId, user_id: ME.id, emoji });
+  }
 }
 
 /* --- reaction popup --- */
@@ -1175,7 +1616,7 @@ function showMsgMenu(msgId, anchor){
   menu.innerHTML=`
     <button data-menu="react">${smile}React</button>
     <button data-menu="copy">${copy}Copy text</button>
-    ${m.from==="me"?`<button data-menu="edit">${pencil}Edit message</button><button data-menu="delete" class="danger">${trash}Delete message</button>`:""}`;
+    ${m.from===ME.id?`<button data-menu="edit">${pencil}Edit message</button><button data-menu="delete" class="danger">${trash}Delete message</button>`:""}`;
   const r=anchor.getBoundingClientRect();
   menu.classList.add("show");
   menu.style.left=Math.max(8, Math.min(r.left-140, innerWidth-menu.offsetWidth-10))+"px";
@@ -1204,10 +1645,11 @@ function cancelEdit(){
   state.editingMsgId=null; $("#editBanner").classList.remove("show");
   const input=$("#composerInput"); input.value=""; autoGrow(input);
 }
-function deleteMsg(msgId){
+async function deleteMsg(msgId){
   const chat=activeChat();
   chat.messages=chat.messages.filter(m=>m.id!==msgId);
   renderMessages(); renderChatList(); toast("Message deleted");
+  await sb.from("reelio_messages").delete().eq("id", msgId);
 }
 
 /* --- composer --- */
@@ -1216,18 +1658,28 @@ $("#composerInput").addEventListener("input", e=>autoGrow(e.target));
 $("#composerInput").addEventListener("keydown", e=>{
   if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); $("#composer").requestSubmit(); }
 });
-
-$("#composer").addEventListener("submit", e=>{
+$("#composer").addEventListener("submit", async e=>{
   e.preventDefault();
   const chat=activeChat(); if(!chat) return;
   const input=$("#composerInput"); const text=input.value.trim(); if(!text) return;
   if(state.editingMsgId){
-    const m=findMsg(state.editingMsgId); m.text=text; m.edited=true;
-    cancelEdit(); renderMessages(); renderChatList(); toast("Message edited"); return;
+    const m=findMsg(state.editingMsgId); if(!m) return;
+    m.text=text; m.edited=true; cancelEdit(); renderMessages(); renderChatList(); toast("Message edited");
+    await sb.from("reelio_messages").update({ content:text, edited_at:new Date().toISOString() }).eq("id", m.id);
+    return;
   }
-  chat.messages.push(M("me", text, "Now"));
-  input.value=""; autoGrow(input); renderMessages(); renderChatList();
+  input.value=""; autoGrow(input);
+  const { data, error } = await sb.from("reelio_messages").insert({
+    conversation_id: chat.id, sender_id: ME.id, content: text
+  }).select().single();
+  if(error){ toast("Message didn't send — try again"); return; }
+  chat.messages.push(msgVM(data));
+  moveChatToTop(chat);
+  renderMessages(); renderChatList();
 });
+function moveChatToTop(chat){
+  const i=CHATS.indexOf(chat); if(i>0){ CHATS.splice(i,1); CHATS.unshift(chat); }
+}
 $("#emojiBtn").addEventListener("click", ()=>{
   const input=$("#composerInput"); input.value+="😀"; autoGrow(input); input.focus();
 });
@@ -1235,15 +1687,15 @@ $("#emojiBtn").addEventListener("click", ()=>{
 /* --- customize chat --- */
 function openCustomize(){
   const chat=activeChat(); if(!chat) return;
-  $("#chatNameInput").value=chat.name;
+  $("#chatNameInput").value=chat.isGroup ? (chat.name||"") : chatDisplayName(chat);
+  $("#chatNameInput").disabled=!chat.isGroup;
   const list=$("#nickList"); list.innerHTML="";
-  const allKeys=["me", ...chat.members];
-  allKeys.forEach(key=>{
-    const p=personOf(key);
+  [ME.id, ...otherMembers(chat)].forEach(userId=>{
+    const p=personShape(profOf(userId));
     const row=document.createElement("div"); row.className="nick-row";
-    row.innerHTML=`${avatarHTML(p,"sm")}<div class="who"><b>${p.name}</b><span>${p.handle}</span></div>`;
-    const inp=document.createElement("input"); inp.type="text"; inp.placeholder=p.name; inp.dataset.nick=key;
-    inp.value=(chat.nicknames||{})[key]||"";
+    row.innerHTML=`${avatarHTML(p,"sm")}<div class="who"><b>${esc(p.name)}</b><span>${esc(p.handle)}${userId===ME.id?" · you":""}</span></div>`;
+    const inp=document.createElement("input"); inp.type="text"; inp.placeholder=p.name; inp.dataset.nick=userId;
+    inp.value=(chat.nicknames||{})[userId]||"";
     row.appendChild(inp); list.appendChild(row);
   });
   const grid=$("#wpGrid"); grid.innerHTML="";
@@ -1257,49 +1709,342 @@ function openCustomize(){
 }
 $("#customizeBtn").addEventListener("click", openCustomize);
 $("#threadTitleBtn").addEventListener("click", openCustomize);
-$("#customizeSave").addEventListener("click", ()=>{
+$("#customizeSave").addEventListener("click", async ()=>{
   const chat=activeChat(); if(!chat) return;
-  const newName=$("#chatNameInput").value.trim(); if(newName) chat.name=newName;
-  chat.nicknames=chat.nicknames||{};
+  const jobs=[];
+  if(chat.isGroup){
+    const newName=$("#chatNameInput").value.trim();
+    if(newName && newName!==chat.name){
+      chat.name=newName;
+      jobs.push(sb.from("reelio_conversations").update({ name:newName }).eq("id", chat.id));
+    }
+  }
   $$("#nickList [data-nick]").forEach(inp=>{
     const val=inp.value.trim();
-    if(val) chat.nicknames[inp.dataset.nick]=val; else delete chat.nicknames[inp.dataset.nick];
+    const userId=inp.dataset.nick;
+    if(val) chat.nicknames[userId]=val; else delete chat.nicknames[userId];
+    jobs.push(sb.from("reelio_conversation_members").update({ nickname: val || null })
+      .eq("conversation_id", chat.id).eq("user_id", userId));
   });
-  const wp=$("#wpGrid .wp-swatch.on"); if(wp) chat.wallpaper=wp.dataset.wp;
+  const wp=$("#wpGrid .wp-swatch.on"); if(wp){ chat.wallpaper=wp.dataset.wp; wpLocal[chat.id]=wp.dataset.wp; }
+  await Promise.all(jobs);
   closeSheets(); renderThreadHead(); renderMessages(); renderChatList();
-  toast("Chat updated — name, nicknames & wallpaper saved");
+  toast("Chat updated");
 });
 
-/* --- new chat --- */
-function openNewChat(){
+/* --- new chat / DM --- */
+async function openNewChat(){
   state.selectedPeople.clear();
-  const list=$("#peopleList"); list.innerHTML="";
-  Object.entries(PEOPLE).forEach(([key,p])=>{
+  const list=$("#peopleList"); list.innerHTML='<p class="empty-note">Loading people…</p>';
+  openSheet("newChatSheet");
+  const { data } = await sb.from("reelio_profiles").select("*").neq("id", ME.id).order("username").limit(100);
+  (data||[]).forEach(p=>profiles.set(p.id, p));
+  list.innerHTML="";
+  if(!data || !data.length){
+    list.innerHTML='<p class="empty-note">No other Reelio accounts yet — once friends sign up, they\'ll show up here.</p>';
+    return;
+  }
+  data.forEach(p=>{
+    const person=personShape(p);
     const row=document.createElement("div"); row.className="nick-row";
-    row.innerHTML=`${avatarHTML(p,"sm")}<div class="who"><b>${p.name}</b><span>${p.handle}</span></div>`;
+    row.innerHTML=`${avatarHTML(person,"sm")}<div class="who"><b>${esc(person.name)}</b><span>${esc(person.handle)}</span></div>`;
     const pick=document.createElement("button"); pick.className="btn btn-ghost"; pick.style.padding="7px 14px"; pick.style.fontSize="13.5px"; pick.textContent="Add";
     pick.addEventListener("click", ()=>{
-      if(state.selectedPeople.has(key)){ state.selectedPeople.delete(key); pick.textContent="Add"; pick.classList.remove("btn-teal"); pick.classList.add("btn-ghost"); }
-      else { state.selectedPeople.add(key); pick.textContent="Added ✓"; pick.classList.add("btn-teal"); pick.classList.remove("btn-ghost"); }
+      if(state.selectedPeople.has(p.id)){ state.selectedPeople.delete(p.id); pick.textContent="Add"; pick.classList.remove("btn-teal"); pick.classList.add("btn-ghost"); }
+      else { state.selectedPeople.add(p.id); pick.textContent="Added ✓"; pick.classList.add("btn-teal"); pick.classList.remove("btn-ghost"); }
     });
     row.appendChild(pick); list.appendChild(row);
   });
-  openSheet("newChatSheet");
 }
 $("#newChatBtn").addEventListener("click", openNewChat);
-$("#startChatBtn").addEventListener("click", ()=>{
+async function createConversation(memberIds, isGroup, name){
+  const { data: conv, error } = await sb.from("reelio_conversations").insert({
+    is_group: isGroup, name: name || null, created_by: ME.id
+  }).select().single();
+  if(error) throw error;
+  const rows=[ME.id, ...memberIds].map(uid=>({ conversation_id: conv.id, user_id: uid }));
+  const { error: mErr } = await sb.from("reelio_conversation_members").insert(rows);
+  if(mErr) throw mErr;
+  const chat={ id:conv.id, isGroup:!!conv.is_group, name:conv.name, created_at:conv.created_at,
+    memberIds:[ME.id, ...memberIds], nicknames:{}, wallpaper:"wp-none", unread:0, messages:[], messagesLoaded:true };
+  CHATS.unshift(chat);
+  return chat;
+}
+async function startDM(userId){
+  const existing=CHATS.find(c=>!c.isGroup && otherMembers(c).length===1 && otherMembers(c)[0]===userId);
+  if(existing){ closeSheets(); switchView("inbox"); openChat(existing.id); return; }
+  try{
+    const chat=await createConversation([userId], false, null);
+    closeSheets(); switchView("inbox"); renderChatList(); openChat(chat.id);
+  }catch(err){ toast("Couldn't start that chat"); }
+}
+$("#startChatBtn").addEventListener("click", async ()=>{
   if(!state.selectedPeople.size){ toast("Pick at least one person first"); return; }
   const members=Array.from(state.selectedPeople);
-  const chat={ id:"c"+Date.now(), type: members.length>1? "group":"dm",
-    name: members.length>1? "New Group" : PEOPLE[members[0]].name,
-    wallpaper:"wp-none", unread:0, members, nicknames:{},
-    messages:[] };
-  CHATS.unshift(chat); closeSheets(); switchView("inbox"); renderChatList(); openChat(chat.id);
-  if(chat.type==="group") setTimeout(openCustomize, 350);
+  if(members.length===1){ startDM(members[0]); return; }
+  try{
+    const chat=await createConversation(members, true, "New Group");
+    closeSheets(); switchView("inbox"); renderChatList(); openChat(chat.id);
+    setTimeout(openCustomize, 350);
+  }catch(err){ toast("Couldn't create that group"); }
 });
 
-/* ================= INIT ================= */
-renderFeed(); renderThumbs(VIDEOS); renderProfileGrid(); renderStats(); renderChatList();
+/* ================= REALTIME ================= */
+function subscribeRealtime(){
+  sb.channel("rt-posts")
+    .on("postgres_changes", { event:"INSERT", schema:"public", table:"reelio_posts" }, async payload=>{
+      if(payload.new.user_id===ME.id) return;
+      await ensureProfiles([payload.new.user_id]);
+      if(VIDEOS.some(v=>v.id===payload.new.id)) return;
+      VIDEOS.unshift(postVM(payload.new, 0, 0));
+      if(state.view==="feed") renderFeed();
+      renderThumbs(VIDEOS);
+    })
+    .on("postgres_changes", { event:"*", schema:"public", table:"reelio_likes" }, payload=>{
+      const pid=(payload.new && payload.new.post_id) || (payload.old && payload.old.post_id);
+      if(pid) refreshPostCounts(pid);
+    })
+    .on("postgres_changes", { event:"INSERT", schema:"public", table:"reelio_comments" }, payload=>{
+      const pid=payload.new.post_id;
+      const v=VIDEOS.find(x=>x.id===pid); if(!v) return;
+      v.commentCount+=1;
+      const cc=document.querySelector(`#feed [data-comments="${pid}"] span:last-child`); if(cc) cc.textContent=fmt(v.commentCount);
+      if(state.commentVideoId===pid && $("#commentsSheet").classList.contains("show")){
+        ensureProfiles([payload.new.user_id]).then(()=>{
+          if(v.commentsLoaded && payload.new.user_id!==ME.id){
+            v.comments.push({ id:payload.new.id, who:payload.new.user_id, text:payload.new.content, time:"now" });
+            renderComments();
+          }
+        });
+      }
+    })
+    .subscribe();
+
+  sb.channel("rt-messages")
+    .on("postgres_changes", { event:"INSERT", schema:"public", table:"reelio_messages" }, async payload=>{
+      const row=payload.new;
+      const chat=CHATS.find(c=>c.id===row.conversation_id);
+      if(!chat){ if(row.sender_id!==ME.id) loadConversations(); return; }
+      if(chat.messages.some(m=>m.id===row.id)) return;
+      await ensureProfiles([row.sender_id]);
+      const isActive = state.activeChatId===chat.id && state.view==="inbox";
+      chat.messages.push(msgVM(row));
+      if(row.sender_id!==ME.id && !isActive) chat.unread+=1;
+      moveChatToTop(chat);
+      if(state.activeChatId===chat.id) renderMessages();
+      renderChatList();
+    })
+    .on("postgres_changes", { event:"UPDATE", schema:"public", table:"reelio_messages" }, payload=>{
+      const chat=CHATS.find(c=>c.id===payload.new.conversation_id); if(!chat) return;
+      const m=chat.messages.find(x=>x.id===payload.new.id); if(!m) return;
+      m.text=payload.new.content||""; m.edited=!!payload.new.edited_at;
+      if(state.activeChatId===chat.id) renderMessages();
+      renderChatList();
+    })
+    .on("postgres_changes", { event:"DELETE", schema:"public", table:"reelio_messages" }, payload=>{
+      const chat=CHATS.find(c=>c.id===payload.old.conversation_id) || activeChat(); if(!chat) return;
+      chat.messages=chat.messages.filter(m=>m.id!==payload.old.id);
+      if(state.activeChatId===chat.id) renderMessages();
+      renderChatList();
+    })
+    .on("postgres_changes", { event:"*", schema:"public", table:"reelio_reactions" }, payload=>{
+      const rec=payload.new && payload.new.message_id ? payload.new : payload.old; if(!rec) return;
+      const chat=activeChat(); if(!chat) return;
+      const m=chat.messages.find(x=>x.id===rec.message_id); if(!m) return;
+      if(payload.eventType==="INSERT"){
+        if(payload.new.user_id===ME.id) return;
+        (m.reactions[payload.new.emoji]=m.reactions[payload.new.emoji]||[]).push(payload.new.user_id);
+      } else if(payload.eventType==="DELETE"){
+        if(payload.old.user_id===ME.id) return;
+        const arr=m.reactions[payload.old.emoji]||[];
+        const i=arr.indexOf(payload.old.user_id); if(i>=0) arr.splice(i,1);
+        if(!arr.length) delete m.reactions[payload.old.emoji];
+      }
+      if(state.activeChatId===chat.id) renderMessages();
+    })
+    .on("postgres_changes", { event:"INSERT", schema:"public", table:"reelio_conversation_members" }, payload=>{
+      if(payload.new.user_id===ME.id) loadConversations();
+    })
+    .subscribe();
+}
+
+/* ================= CALLS (WebRTC + Realtime signaling) ================= */
+const RTC_CFG = { iceServers:[{ urls:"stun:stun.l.google.com:19302" }, { urls:"stun:stun1.l.google.com:19302" }] };
+let callChannel=null;          // my personal signaling channel: calls-<myId>
+let peerChannel=null;          // channel to reach the other person: calls-<theirId>
+let pc=null, localStream=null, callPeerId=null, callKind="video", callState="idle", pendingOffer=null, iceQueue=[], callTimer=null, callSeconds=0;
+
+function subscribeCallChannel(){
+  callChannel = sb.channel("calls-"+ME.id, { config:{ broadcast:{ self:false } } });
+  callChannel.on("broadcast", { event:"signal" }, ({ payload })=>onSignal(payload));
+  callChannel.subscribe();
+}
+function sendSignal(toId, payload){
+  if(!peerChannel || peerChannel.topic !== "realtime:calls-"+toId){
+    if(peerChannel) sb.removeChannel(peerChannel);
+    peerChannel = sb.channel("calls-"+toId, { config:{ broadcast:{ self:false } } });
+    peerChannel.subscribe();
+  }
+  // Broadcast right away; channel subscription completes fast, and retry once if needed.
+  const send=()=>peerChannel.send({ type:"broadcast", event:"signal", payload:{ ...payload, from:ME.id } });
+  send(); setTimeout(()=>{ if(callState==="calling" && payload.kind==="offer") send(); }, 600);
+}
+async function onSignal(p){
+  if(!p || p.from===ME.id) return;
+  if(p.kind==="offer"){
+    if(callState!=="idle"){ sendSignal(p.from, { kind:"end", reason:"busy" }); return; }
+    await ensureProfiles([p.from]);
+    pendingOffer=p;
+    callPeerId=p.from; callKind=p.callType||"video";
+    const person=personShape(profOf(p.from));
+    $("#incomingAvatar").innerHTML=avatarHTML(person, "xl");
+    $("#incomingName").textContent=person.name;
+    $("#incomingKind").textContent = callKind==="video" ? "Incoming video call…" : "Incoming voice call…";
+    $("#incomingUI").classList.add("show");
+    callState="ringing";
+    clearTimeout(callTimer);
+    callTimer=setTimeout(()=>{ if(callState==="ringing"){ sendSignal(callPeerId, { kind:"end", reason:"missed" }); resetCall(); toast("Missed call"); } }, 35000);
+    return;
+  }
+  if(p.kind==="answer"){
+    if(pc && callState==="calling"){
+      callState="live"; startCallClock();
+      await pc.setRemoteDescription({ type:"answer", sdp:p.sdp });
+      flushIce();
+    }
+    return;
+  }
+  if(p.kind==="ice"){
+    if(pc && pc.remoteDescription) pc.addIceCandidate(p.candidate).catch(()=>{});
+    else iceQueue.push(p.candidate);
+    return;
+  }
+  if(p.kind==="end"){
+    if(callState!=="idle"){ toast(p.reason==="busy" ? "They're on another call" : "Call ended"); resetCall(); }
+    return;
+  }
+}
+function flushIce(){ iceQueue.forEach(c=>pc && pc.addIceCandidate(c).catch(()=>{})); iceQueue=[]; }
+function setupPeer(){
+  pc=new RTCPeerConnection(RTC_CFG);
+  pc.onicecandidate=e=>{ if(e.candidate) sendSignal(callPeerId, { kind:"ice", candidate:e.candidate.toJSON() }); };
+  pc.ontrack=e=>{ $("#remoteVideo").srcObject=e.streams[0]; };
+  pc.onconnectionstatechange=()=>{ if(pc && (pc.connectionState==="disconnected" || pc.connectionState==="failed")){ toast("Call connection lost"); endCall(false); } };
+  if(localStream) localStream.getTracks().forEach(t=>pc.addTrack(t, localStream));
+}
+async function getMedia(){
+  localStream=await navigator.mediaDevices.getUserMedia({
+    video: callKind==="video" ? { facingMode:"user" } : false, audio:true
+  });
+  $("#localVideo").srcObject=localStream;
+  $("#localVideo").style.display = callKind==="video" ? "" : "none";
+  $("#remoteVideo").style.display = callKind==="video" ? "" : "none";
+}
+function showCallUI(name, status){
+  const person=personShape(profOf(callPeerId));
+  $("#callAvatar").innerHTML = callKind==="video" ? "" : avatarHTML(person, "xl");
+  $("#callAvatar").style.display = callKind==="video" ? "none" : "";
+  $("#callName").textContent=name;
+  $("#callStatus").textContent=status;
+  $("#muteBtn").classList.remove("off"); $("#camBtn").classList.remove("off");
+  $("#camBtn").style.display = callKind==="video" ? "" : "none";
+  $("#callUI").classList.add("show");
+}
+function startCallClock(){
+  callSeconds=0; $("#callStatus").textContent="0:00";
+  clearInterval(callTimer);
+  callTimer=setInterval(()=>{ callSeconds++; $("#callStatus").textContent=Math.floor(callSeconds/60)+":"+String(callSeconds%60).padStart(2,"0"); }, 1000);
+}
+async function startCall(kind){
+  const chat=activeChat(); if(!chat || chat.isGroup) return;
+  const other=otherMembers(chat)[0]; if(!other) return;
+  if(callState!=="idle"){ toast("You're already in a call"); return; }
+  callKind=kind; callPeerId=other; callState="calling";
+  try{
+    await getMedia();
+  }catch(err){
+    callState="idle"; toast(kind==="video" ? "Camera/mic blocked — allow access to call" : "Mic blocked — allow access to call"); return;
+  }
+  showCallUI(personShape(profOf(other)).name, kind==="video" ? "Video calling…" : "Calling…");
+  setupPeer();
+  const offer=await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  sendSignal(other, { kind:"offer", callType:kind, sdp:offer.sdp });
+  clearTimeout(callTimer);
+  callTimer=setTimeout(()=>{ if(callState==="calling"){ toast("No answer"); endCall(true); } }, 35000);
+}
+$("#voiceCallBtn").addEventListener("click", ()=>startCall("audio"));
+$("#videoCallBtn").addEventListener("click", ()=>startCall("video"));
+$("#acceptBtn").addEventListener("click", async ()=>{
+  if(!pendingOffer) return;
+  $("#incomingUI").classList.remove("show");
+  clearTimeout(callTimer);
+  callState="live";
+  try{
+    await getMedia();
+  }catch(err){
+    sendSignal(callPeerId, { kind:"end", reason:"no-media" }); resetCall(); toast("Camera/mic blocked — can't take the call"); return;
+  }
+  showCallUI(personShape(profOf(callPeerId)).name, "Connecting…");
+  setupPeer();
+  await pc.setRemoteDescription({ type:"offer", sdp:pendingOffer.sdp });
+  flushIce();
+  const answer=await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  sendSignal(callPeerId, { kind:"answer", sdp:answer.sdp });
+  pendingOffer=null;
+  startCallClock();
+});
+$("#declineBtn").addEventListener("click", ()=>{
+  if(callPeerId) sendSignal(callPeerId, { kind:"end", reason:"declined" });
+  resetCall();
+});
+$("#hangupBtn").addEventListener("click", ()=>endCall(true));
+$("#muteBtn").addEventListener("click", ()=>{
+  if(!localStream) return;
+  const t=localStream.getAudioTracks()[0]; if(!t) return;
+  t.enabled=!t.enabled; $("#muteBtn").classList.toggle("off", !t.enabled);
+});
+$("#camBtn").addEventListener("click", ()=>{
+  if(!localStream) return;
+  const t=localStream.getVideoTracks()[0]; if(!t) return;
+  t.enabled=!t.enabled; $("#camBtn").classList.toggle("off", !t.enabled);
+  $("#localVideo").style.opacity=t.enabled? "1" : ".25";
+});
+function endCall(notify){
+  if(notify && callPeerId) sendSignal(callPeerId, { kind:"end" });
+  resetCall();
+}
+function resetCall(){
+  clearTimeout(callTimer); clearInterval(callTimer);
+  if(pc){ try{ pc.close(); }catch(e){} pc=null; }
+  if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; }
+  $("#remoteVideo").srcObject=null; $("#localVideo").srcObject=null;
+  $("#callUI").classList.remove("show"); $("#incomingUI").classList.remove("show");
+  callState="idle"; callPeerId=null; pendingOffer=null; iceQueue=[];
+}
+
+/* ================= BOOT ================= */
+(async function boot(){
+  if(!sb){
+    $("#bootSplash").classList.add("hide");
+    $("#authGate").classList.add("show");
+    setAuthMode("login");
+    authError("Couldn't load Reelio's connection library — check your connection and refresh the page.");
+    return;
+  }
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session && session.user){
+    await enterApp(session.user);
+  } else {
+    $("#bootSplash").classList.add("hide");
+    $("#authGate").classList.add("show");
+    setAuthMode("login");
+  }
+  sb.auth.onAuthStateChange((event)=>{
+    if(event==="SIGNED_OUT"){ location.reload(); }
+  });
+})();
 </script>
 </body>
 </html>
