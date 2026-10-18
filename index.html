@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.5.12" />
+<meta name="app-version" content="1.5.13" />
 <title>Reelio</title>
 <script>
 /* iOS home-screen viewport gap: on some iPhones the standalone app's
@@ -595,7 +595,11 @@
   }
 
   /* ---------- Audio on reels ---------- */
-  .reel-audio{display:flex; align-items:center; gap:6px; margin-top:8px; color:#fff; font-size:13px; font-weight:500; padding:0; max-width:100%; text-align:left; text-shadow:0 1px 6px rgba(0,0,0,.6);}
+  /* position/top nudge ONLY this line (its spinning disc icon + title)
+     up a few px off the progress bar it used to sit right on top of.
+     position:relative keeps it in flow, so the @handle and title above
+     it inside .reel-meta do not move at all. */
+  .reel-audio{display:flex; align-items:center; gap:6px; margin-top:8px; color:#fff; font-size:13px; font-weight:500; padding:0; max-width:100%; text-align:left; text-shadow:0 1px 6px rgba(0,0,0,.6); position:relative; top:-8px;}
   .reel-audio .disc{width:16px; height:16px; flex:none; display:flex;}
   .reel-audio .disc svg{width:16px; height:16px;}
   .reel-card.playing .reel-audio .disc svg{animation:discspin 3.4s linear infinite;}
@@ -616,11 +620,14 @@
   .author-name{font:inherit; color:#fff; padding:0; text-align:left; text-shadow:inherit;}
   .meta-main .reel-cap{margin-top:1px;}
   .meta-main .reel-audio{margin-top:2px;}
-  .reel-disc{position:absolute; right:10px; bottom:12px; width:38px; height:38px; border-radius:50%; padding:0; z-index:6; background:#0c0c0e; border:2.5px solid rgba(255,255,255,.92); box-shadow:0 4px 14px rgba(0,0,0,.45); overflow:hidden; display:flex; align-items:center; justify-content:center; flex:none;}
+  /* bottom is 8px higher than the caption block's base so the spinning
+     disc gets the same breathing room off the progress bar as the audio
+     line (see .reel-audio's top nudge above). */
+  .reel-disc{position:absolute; right:10px; bottom:20px; width:38px; height:38px; border-radius:50%; padding:0; z-index:6; background:#0c0c0e; border:2.5px solid rgba(255,255,255,.92); box-shadow:0 4px 14px rgba(0,0,0,.45); overflow:hidden; display:flex; align-items:center; justify-content:center; flex:none;}
   .reel-disc .avatar{width:100%; height:100%; font-size:15px;}
   .reel-card.playing .reel-disc{animation:discspin 3.4s linear infinite;}
   @media (prefers-reduced-motion: reduce){ .reel-card.playing .reel-disc{animation:none;} }
-  @media (max-width:760px){ .reel-disc{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift)); right:10px;} }
+  @media (max-width:760px){ .reel-disc{bottom:calc(67px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift)); right:10px;} }
   /* Mobile overlay stack — this block MUST stay after every base reel
      rule. The first mobile media query (near the top of the feed styles)
      sets these same bottoms, but the base .reel-meta/.reel-rail/
@@ -649,7 +656,10 @@
     .reel-meta{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift));}
     .reel-rail{bottom:calc(189px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift));}
     .reel-progress{bottom:calc(56px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift));}
-    .reel-disc{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift)); right:10px;}
+    /* The disc rides 8px above the caption block's offset (67 vs 59) —
+       same lift the audio line gets from its top nudge, so disc and
+       audio text stay level with each other, clear of the progress bar. */
+    .reel-disc{bottom:calc(67px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift)); right:10px;}
   }
   .reel-end{background:#000;}
   .end-inner{display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:24px; color:#fff;}
@@ -770,7 +780,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.5.12</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.5.13</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -1101,7 +1111,7 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.12</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.13</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
     </div>
     <div class="setting-row" style="display:block;">
       <div class="sr-main" style="margin-bottom:9px;"><b>Appearance</b><span>Dark is Reelio's classic look. Light flips the whole app — feed, chats, sheets, everything.</span></div>
@@ -3149,7 +3159,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.5.12";
+const APP_VERSION = "1.5.13";
 const EDGE_FIX_KEY = "reelio-edgefix-154";
 const UPDATE_ATTEMPT_KEY = "reelio-update-attempt"; // sessionStorage only: {v, tries} for the update the user just tapped
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
