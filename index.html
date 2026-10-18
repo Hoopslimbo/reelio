@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.5.9" />
+<meta name="app-version" content="1.5.10" />
 <title>Reelio</title>
 <script>
 /* iOS home-screen viewport gap: on some iPhones the standalone app's
@@ -193,9 +193,9 @@
   @media (max-width:760px){
     .reel{padding:0; width:100%; max-width:100%; overflow:hidden;}
     .reel-card{max-width:100%; width:100%; height:100%; max-height:none; aspect-ratio:auto; border-radius:0; box-shadow:none;}
-    .reel-meta{bottom:calc(64px + env(safe-area-inset-bottom));}
-    .reel-rail{bottom:calc(194px + env(safe-area-inset-bottom));}
-    .reel-progress{bottom:calc(56px + env(safe-area-inset-bottom));}
+    .reel-meta{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
+    .reel-rail{bottom:calc(189px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
+    .reel-progress{bottom:calc(56px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
     .view{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
     #view-feed{padding-bottom:0;}
   }
@@ -612,25 +612,33 @@
   .reel-disc .avatar{width:100%; height:100%; font-size:15px;}
   .reel-card.playing .reel-disc{animation:discspin 3.4s linear infinite;}
   @media (prefers-reduced-motion: reduce){ .reel-card.playing .reel-disc{animation:none;} }
-  @media (max-width:760px){ .reel-disc{bottom:calc(64px + env(safe-area-inset-bottom)); right:10px;} }
-  /* Mobile overlay lift — this block MUST stay after every base reel rule.
-     The first mobile media query (near the top of the feed styles) sets
-     these same bottoms, but the base .reel-meta/.reel-rail/.reel-progress
-     rules come after it in the file and silently won, leaving the caption
-     block at bottom:20px — behind the fixed bottom nav, which is why the
-     @handle, title and audio line kept looking cut off. These late rules
-     are the ones that actually apply: on phones the whole overlay stack
-     (caption block, action rail, progress bar, audio disc) sits clearly
-     above the bottom nav. The offsets hug the nav on purpose: the trimmed
-     mobile nav is ~54px tall above the safe area, so the progress bar
-     rests 2px over its top edge, the caption block 8px above the bar,
-     and the rail/disc came down by the same 10px — no empty band between
-     the post info and the nav. */
+  @media (max-width:760px){ .reel-disc{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px)); right:10px;} }
+  /* Mobile overlay stack — this block MUST stay after every base reel
+     rule. The first mobile media query (near the top of the feed styles)
+     sets these same bottoms, but the base .reel-meta/.reel-rail/
+     .reel-progress rules come after it in the file and silently won,
+     leaving the caption block at bottom:20px — behind the fixed bottom
+     nav, which is why the @handle, title and audio line kept looking
+     cut off. These late rules are the ones that actually apply.
+     The stack is glued to the nav with ZERO gap, by construction: the
+     trimmed mobile nav is 56px tall above the safe area (1px border +
+     3px top pad + 46px button + 6px bottom pad), so the progress bar's
+     offset equals the nav height exactly — its bottom edge lands on the
+     nav's top edge. The caption block sits exactly one bar-height (3px)
+     higher, so its bottom edge touches the bar's top edge, and the
+     rail/disc keep their distance from the caption block, so nothing
+     floats and nothing overlaps.
+     The - var(--vh-gap) term matters on letterboxed iPhones (see the
+     head script): there the layout viewport ends --vh-gap px above the
+     physical screen bottom, the reel card ends with it, but the nav is
+     translated down by that same amount to reach the true bottom — so
+     without the subtraction the whole stack hovered one vh-gap above
+     the nav, leaving a visible empty band under the progress line. */
   @media (max-width:760px){
-    .reel-meta{bottom:calc(64px + env(safe-area-inset-bottom));}
-    .reel-rail{bottom:calc(194px + env(safe-area-inset-bottom));}
-    .reel-progress{bottom:calc(56px + env(safe-area-inset-bottom));}
-    .reel-disc{bottom:calc(64px + env(safe-area-inset-bottom)); right:10px;}
+    .reel-meta{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
+    .reel-rail{bottom:calc(189px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
+    .reel-progress{bottom:calc(56px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
+    .reel-disc{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px)); right:10px;}
   }
   .reel-end{background:#000;}
   .end-inner{display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:24px; color:#fff;}
@@ -750,7 +758,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.5.9</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.5.10</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -1081,7 +1089,7 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.9</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.10</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
     </div>
     <div class="setting-row" style="display:block;">
       <div class="sr-main" style="margin-bottom:9px;"><b>Appearance</b><span>Dark is Reelio's classic look. Light flips the whole app — feed, chats, sheets, everything.</span></div>
@@ -3078,7 +3086,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.5.9";
+const APP_VERSION = "1.5.10";
 const EDGE_FIX_KEY = "reelio-edgefix-154";
 const UPDATE_ATTEMPT_KEY = "reelio-update-attempt"; // sessionStorage only: {v, tries} for the update the user just tapped
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
