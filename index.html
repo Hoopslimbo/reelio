@@ -8,13 +8,17 @@
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
 <link rel="manifest" href="assets/manifest.webmanifest" />
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f4f2" />
+<!-- No theme-color meta on purpose: on current iOS a theme-color (here, and
+     the manifest theme_color) makes the home-screen app paint the status-bar
+     strip as a solid band of that color — the black bar over the feed — and
+     the edge-to-edge frame from black-translucent + viewport-fit=cover never
+     engages. With no theme-color anywhere, the status bar overlays the
+     video itself. Do not re-add one. -->
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.5.3" />
+<meta name="app-version" content="1.5.4" />
 <title>Reelio</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -683,7 +687,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.5.3</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.5.4</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -1014,7 +1018,7 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.3</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.4</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
     </div>
     <div class="setting-row" style="display:block;">
       <div class="sr-main" style="margin-bottom:9px;"><b>Appearance</b><span>Dark is Reelio's classic look. Light flips the whole app — feed, chats, sheets, everything.</span></div>
@@ -3012,7 +3016,8 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.5.3";
+const APP_VERSION = "1.5.4";
+const EDGE_FIX_KEY = "reelio-edgefix-154";
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
 function versionParts(v){ return String(v||"0").split(".").map(n=>parseInt(n,10)||0); }
 function isNewer(remote, local){
@@ -3112,9 +3117,37 @@ function trackInstallingWorker(worker){
     }
   });
 }
-function initUpdates(){
+async function initUpdates(){
   // Clean the cache-bust params left by an update reload, without reloading.
-  try{ const p=new URLSearchParams(window.location.search); if(p.has("t")){ p.delete("t"); p.delete("v"); const qs=p.toString(); history.replaceState(null, "", window.location.pathname + (qs ? "?"+qs : "") + window.location.hash); } }catch(e){}
+  try{ const p=new URLSearchParams(window.location.search); if(p.has("t")){ p.delete("t"); p.delete("v"); p.delete("edgefix"); const qs=p.toString(); history.replaceState(null, "", window.location.pathname + (qs ? "?"+qs : "") + window.location.hash); } }catch(e){}
+  /* One-time black-bar migration (v1.5.4). When a home-screen icon is first
+     added, iOS pins a launch token set for the app (start URL, status-bar
+     style) plus its own page snapshot, and the app's Cache Storage gained
+     entries under the old shell; between them an already-installed app can
+     keep launching with the old non-edge-to-edge frame even though the
+     served page is fixed. The normal update tap only swaps index.html, so
+     do this once per install: drop every service-worker registration and
+     every cache, then reload once from a cache-busted URL so iOS rebuilds
+     its snapshot from the current page (translucent status bar, no
+     theme-color). Guarded by a localStorage token plus an edgefix URL
+     param so it can never loop; the reload looks like an ordinary update
+     reload and changes nothing else. */
+  try{
+    if(!localStorage.getItem(EDGE_FIX_KEY)){
+      localStorage.setItem(EDGE_FIX_KEY, "1");
+      if("serviceWorker" in navigator){
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r=>r.unregister().catch(()=>false)));
+      }
+      if("caches" in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
+      const p=new URLSearchParams(window.location.search);
+      if(!p.has("edgefix")){
+        p.set("edgefix","1"); p.set("t", Date.now()+"");
+        location.replace(window.location.pathname + "?" + p.toString() + window.location.hash);
+        return; // navigating away; everything below re-runs on the fresh load
+      }
+    }
+  }catch(e){}
   $$(".app-version").forEach(el=>{ el.textContent = APP_VERSION; });
   const nowBtn=$("#updateNowBtn"), laterBtn=$("#updateLaterBtn");
   if(nowBtn) nowBtn.addEventListener("click", applyUpdate);
@@ -3164,8 +3197,8 @@ function applyThemeUI(){
   const dBtn=$("#themeDark"), lBtn=$("#themeLight");
   if(dBtn) dBtn.classList.toggle("on", eff==="dark");
   if(lBtn) lBtn.classList.toggle("on", eff==="light");
-  const col = eff==="dark" ? "#000000" : "#f4f4f2";
-  $$('meta[name="theme-color"]').forEach(m=>m.setAttribute("content", col));
+  /* No theme-color sync here — see the note in <head>: a theme-color makes
+     iOS paint a solid status-bar band over the feed. */
 }
 function setTheme(t){
   themeChoice=t;
