@@ -11,9 +11,9 @@
 <meta name="theme-color" content="#000000" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.4.1" />
+<meta name="app-version" content="1.4.4" />
 <title>Reelio</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -38,7 +38,7 @@
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{height:100%; width:100%; max-width:100%; overflow-x:hidden; overscroll-behavior:none;}
-  html{-webkit-text-size-adjust:100%; text-size-adjust:100%;}
+  html{-webkit-text-size-adjust:100%; text-size-adjust:100%; background:var(--bg);}
   body{margin:0; font-family:var(--font); background:var(--bg); color:var(--text); overflow:hidden; overflow-x:hidden; max-width:100vw; touch-action:manipulation;}
   button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
   input,textarea{font-family:inherit; color:inherit;}
@@ -89,12 +89,15 @@
   .avatar.xl{width:96px; height:96px; font-size:36px;}
 
   /* ---------- Main / views ---------- */
-  .main{position:relative; min-width:0; max-width:100%; overflow-x:hidden; height:100dvh; background:var(--bg);}
+  .main{position:relative; min-width:0; max-width:100%; overflow-x:hidden; height:100dvh; background:var(--bg); padding-top:env(safe-area-inset-top); box-sizing:border-box;}
+  /* Dark scheme is the default: keep the strip behind the status bar pure
+     black so it matches the feed exactly — no visible seam at the top. */
+  @media (prefers-color-scheme: dark){ .main{background:#000;} }
   .view{display:none; height:100%; max-width:100%; overflow-x:hidden;}
   .view.active{display:flex; flex-direction:column;}
 
   /* ---------- Feed ---------- */
-  .feed-top{position:absolute; top:0; left:0; right:0; z-index:30; display:flex; align-items:center; justify-content:center; gap:26px; padding:16px 16px 26px; background:linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0)); pointer-events:none;}
+  .feed-top{position:absolute; top:0; left:0; right:0; z-index:30; display:flex; align-items:center; justify-content:center; gap:26px; padding:calc(14px + env(safe-area-inset-top)) 16px 26px; background:linear-gradient(to bottom, rgba(0,0,0,.45), rgba(0,0,0,0)); pointer-events:none;}
   .feed-top button{pointer-events:auto; font-size:16.5px; font-weight:700; color:rgba(255,255,255,.65); padding:4px 2px; position:relative; text-shadow:0 1px 8px rgba(0,0,0,.5);}
   .feed-top button.on{color:#fff;}
   .feed-top button.on::after{content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:-5px; width:26px; height:3px; border-radius:2px; background:var(--teal-bright);}
@@ -120,6 +123,7 @@
   .follow-chip{font-size:12.5px; font-weight:700; border:1.5px solid var(--teal-bright); color:var(--teal-bright); border-radius:7px; padding:3px 9px; background:rgba(0,0,0,.25);}
   .follow-chip.following{border-color:rgba(255,255,255,.5); color:#fff;}
   .reel-cap{margin-top:9px; font-size:14.5px; line-height:1.45; text-shadow:0 1px 6px rgba(0,0,0,.6); max-width:46ch;}
+  .reel-cap .htag{color:var(--teal-bright); font-weight:700;}
   .reel-tags{margin-top:6px; font-size:13.5px; font-weight:700; color:#dffcf6; text-shadow:0 1px 6px rgba(0,0,0,.6);}
   .reel-tags span{margin-right:9px;}
   .reel-rail{position:absolute; right:10px; bottom:14px; z-index:6; display:flex; flex-direction:column; align-items:center; gap:15px;}
@@ -410,8 +414,8 @@
     .bottom-nav button.on{color:var(--text);}
     .bottom-nav svg{width:24px; height:24px;}
     .bottom-nav .dot{position:absolute; top:0; right:8px; background:var(--heart); color:#fff; font-size:10px; font-weight:800; min-width:17px; height:17px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 4px;}
-    .bottom-nav .create-btn{width:46px; height:32px; border-radius:9px; background:var(--teal); color:#032723; display:flex; align-items:center; justify-content:center; margin-top:2px;}
-    .bottom-nav .create-btn svg{width:21px; height:21px;}
+    .bottom-nav .create-btn{display:flex; align-items:center; justify-content:center; color:var(--text); background:none; border:none; padding:2px 4px;}
+    .bottom-nav .create-btn svg{width:27px; height:27px;}
     .main{padding-bottom:0;}
     .view-feed-pad{padding-bottom:64px;}
   }
@@ -506,7 +510,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.4.1</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.4.4</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -711,10 +715,7 @@
     <div class="field">
       <label for="uploadCaption">Caption</label>
       <textarea id="uploadCaption" rows="2" placeholder="What's happening in this one?"></textarea>
-    </div>
-    <div class="field">
-      <label for="uploadTags">Tags</label>
-      <input type="text" id="uploadTags" placeholder="skate, sunset, firsttry" />
+      <p class="hint">Drop #hashtags right in your caption — like #skate or #cooking. People who watch and like posts with those tags will see yours more.</p>
     </div>
   </div>
   <div class="sheet-actions">
@@ -772,8 +773,8 @@
       <button id="tabSignup">Sign up</button>
     </div>
     <form id="authForm">
-      <div class="field" id="authNameField" style="display:none;"><label for="authDisplayName">Display name</label><input type="text" id="authDisplayName" placeholder="Your name" autocomplete="name" /></div>
-      <div class="field" id="authUserField" style="display:none;"><label for="authUsername">Username</label><input type="text" id="authUsername" placeholder="pick_a_name" autocomplete="username" /></div>
+      <div class="field" id="authNameField" style="display:none;"><label for="authDisplayName">Display name — shown on your profile</label><input type="text" id="authDisplayName" placeholder="Your name" autocomplete="name" /></div>
+      <div class="field" id="authUserField" style="display:none;"><label for="authUsername">Username — your unique @handle</label><input type="text" id="authUsername" placeholder="pick_a_name" autocomplete="username" /></div>
       <div class="field"><label for="authEmail">Email</label><input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" required /></div>
       <div class="field"><label for="authPassword">Password</label><input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" required /></div>
       <div class="auth-error" id="authError"></div>
@@ -829,7 +830,7 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.4.1</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.4.4</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
     </div>
     <div class="setting-row">
       <div class="sr-main"><b>Check for Updates</b><span>Reelio also checks automatically every time it opens.</span></div>
@@ -937,10 +938,11 @@ $("#authForm").addEventListener("submit", async e=>{
       const username=$("#authUsername").value.trim().toLowerCase().replace(/[^a-z0-9_.]/g,"");
       const displayName=$("#authDisplayName").value.trim();
       if(username.length<3) throw new Error("Pick a username of at least 3 characters (letters, numbers, _ or .).");
+      if(!displayName) throw new Error("Add a display name — it's the name shown on your profile, and it's separate from your username.");
       if(password.length<6) throw new Error("Password needs at least 6 characters.");
       const { data: taken } = await sb.from("reelio_profiles").select("id").eq("username", username).maybeSingle();
       if(taken) throw new Error("That username is taken — try another one.");
-      const { data, error } = await sb.auth.signUp({ email, password });
+      const { data, error } = await sb.auth.signUp({ email, password, options:{ data:{ username, display_name: displayName } } });
       if(error) throw error;
       if(!data.user) throw new Error("Something went wrong signing up. Try again.");
       if(!data.session){
@@ -950,7 +952,7 @@ $("#authForm").addEventListener("submit", async e=>{
         data.user = signedIn.user; data.session = signedIn.session;
       }
       const { error: pErr } = await sb.from("reelio_profiles").insert({
-        id:data.user.id, username, display_name: displayName || username, bio:""
+        id:data.user.id, username, display_name: displayName, bio:""
       });
       if(pErr) throw new Error(pErr.code==="23505" ? "That username is taken — try another one." : pErr.message);
       await enterApp(data.user);
@@ -971,11 +973,15 @@ $("#authForm").addEventListener("submit", async e=>{
 async function fetchMyProfile(user){
   let { data } = await sb.from("reelio_profiles").select("*").eq("id", user.id).maybeSingle();
   if(!data){
-    // Account exists without a profile row (e.g. profile insert was interrupted) — create one.
-    let base=(user.email||"user").split("@")[0].toLowerCase().replace(/[^a-z0-9_.]/g,"").slice(0,20) || "user";
+    // Account exists without a profile row (e.g. profile insert was interrupted) — create one,
+    // restoring the username and display name chosen at signup (kept in the auth metadata)
+    // so the two stay separate instead of collapsing into one value.
+    const meta=user.user_metadata||{};
+    let base=((meta.username||"").trim() || (user.email||"user").split("@")[0]).toLowerCase().replace(/[^a-z0-9_.]/g,"").slice(0,20) || "user";
+    const chosenName=(meta.display_name||"").trim();
     let username=base, tries=0;
     while(tries<5){
-      const { error } = await sb.from("reelio_profiles").insert({ id:user.id, username, display_name:base, bio:"" });
+      const { error } = await sb.from("reelio_profiles").insert({ id:user.id, username, display_name: chosenName || username, bio:"" });
       if(!error) break;
       tries++; username = base + Math.floor(100+Math.random()*900);
     }
@@ -1034,15 +1040,43 @@ const commentSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const shareSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5.5 20 12l-7 6.5v-4C7 14.5 4.5 16.5 3 19c0-6 3.5-9.5 10-10z"/><path d="M13 5.5V9"/></svg>';
 const bookmarkSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12V21l-6-4-6 4z"/></svg>';
 
+/* Hashtags live in the caption: "#skate" anywhere in the text is a tag.
+   tagAffinity learns, per user, which tags they engage with — seeded from
+   their likes (stored server-side) and grown by watch time this session —
+   and the For You feed boosts posts whose tags score high. */
+function parseHashtags(text){
+  const out = [];
+  const re = /#([\p{L}\p{N}_]+)/gu;
+  let m;
+  while((m = re.exec(text || "")) !== null){
+    const t = m[1].toLowerCase();
+    if(t && !out.includes(t)) out.push(t);
+  }
+  return out;
+}
+function normTag(t){ return String(t || "").replace(/^#/, "").toLowerCase(); }
+const tagAffinity = {};   // tag (no #) -> engagement score for the signed-in user
+function bumpAffinity(tags, amount){
+  (tags || []).forEach(t=>{
+    const k = normTag(t); if(!k) return;
+    tagAffinity[k] = Math.max(0, (tagAffinity[k] || 0) + amount);
+  });
+}
+function seedAffinityFromLikes(){
+  VIDEOS.forEach(v=>{ if(state.liked.has(v.id)) bumpAffinity(v.tags, 3); });
+}
 function postVM(row, likeCount, commentCount){
   const p = personShape(profOf(row.user_id));
+  const tagSet = new Set();
+  (row.tags || []).forEach(t=>{ const k = normTag(t); if(k) tagSet.add(k); });
+  parseHashtags(row.caption || "").forEach(t=>tagSet.add(t));
   return {
     id: row.id, userId: row.user_id, mine: row.user_id === (ME && ME.id),
     author: p.name, handle: p.handle, color: p.color, initial: p.initial, avatarUrl: p.avatarUrl,
     type: row.media_type,
     videoUrl: row.media_type === "video" ? row.media_url : null,
     img: row.media_type === "photo" ? row.media_url : "",
-    caption: row.caption || "", tags: (row.tags || []).map(t => t.startsWith("#") ? t : "#" + t),
+    caption: row.caption || "", tags: [...tagSet].map(t => "#" + t),
     likes: likeCount || 0, commentCount: commentCount || 0,
     comments: null, commentsLoaded: false, shares: 0, created_at: row.created_at
   };
@@ -1063,6 +1097,7 @@ async function loadPosts(){
   }
   VIDEOS = rows.map(r=>postVM(r, likeCounts[r.id], commentCounts[r.id]));
   state.myPosts = VIDEOS.filter(v=>v.mine);
+  seedAffinityFromLikes();
   renderFeed(); renderThumbs(VIDEOS);
 }
 async function loadFollows(){
@@ -1085,11 +1120,22 @@ async function refreshPostCounts(postId){
   if(cc2) cc2.textContent = fmt(v.commentCount);
 }
 
+function forYouScore(v){
+  let s = 0;
+  v.tags.forEach(t=>{ s += tagAffinity[normTag(t)] || 0; });
+  s *= 4;                                            // tag match is the main signal
+  const ageH = (Date.now() - new Date(v.created_at).getTime()) / 36e5;
+  if(isFinite(ageH)) s += Math.max(0, 12 - ageH) * 0.4;  // fresh posts still surface
+  s += Math.min(v.likes || 0, 20) * 0.1;
+  if(v.mine) s += 6;                                 // your own post lands near the top
+  return s;
+}
 function visibleVideos(){
   if(state.feedTab==="following") return VIDEOS.filter(v=>state.following.has(v.userId) || v.mine);
-  return VIDEOS;
+  return [...VIDEOS].sort((a,b)=>forYouScore(b)-forYouScore(a));  // stable: ties keep newest-first
 }
 function renderFeed(){
+  flushWatch();
   const feed=$("#feed"); feed.innerHTML="";
   const list=visibleVideos();
   $(".feed-nav-hint").style.display = list.length ? "" : "none";
@@ -1108,6 +1154,8 @@ function renderFeed(){
     const reel=document.createElement("div"); reel.className="reel"; reel.dataset.id=v.id;
     const liked=state.liked.has(v.id), saved=state.saved.has(v.id), following=state.following.has(v.userId);
     const isPhoto = v.type==="photo";
+    const capTags = new Set(parseHashtags(v.caption));
+    const extraTags = v.tags.filter(t=>!capTags.has(normTag(t)));
     reel.innerHTML=`
       <div class="reel-card" data-card="${v.id}">
         ${v.videoUrl ? `<video src="${v.videoUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loop muted playsinline></video>`
@@ -1118,7 +1166,7 @@ function renderFeed(){
         <div class="reel-meta">
           <div class="reel-author"><span>${esc(v.handle)}</span>${v.mine?"":`<button class="follow-chip ${following?"following":""}" data-follow="${v.userId}">${following?"Following":"Follow"}</button>`}</div>
           <p class="reel-cap"></p>
-          <div class="reel-tags">${v.tags.map(t=>`<span>${esc(t)}</span>`).join("")}</div>
+          ${extraTags.length ? `<div class="reel-tags">${extraTags.map(t=>`<span>${esc(t)}</span>`).join("")}</div>` : ""}
         </div>
         <div class="reel-rail">
           <div class="rail-avatar">${avatarHTML(v,"md")}${v.mine?"":`<span class="plus ${following?"done":""}" data-follow="${v.userId}">${following?"✓":"+"}</span>`}</div>
@@ -1129,7 +1177,7 @@ function renderFeed(){
         </div>
         ${isPhoto ? "" : `<div class="reel-progress"><i></i></div>`}
       </div>`;
-    reel.querySelector(".reel-cap").textContent = v.caption;
+    reel.querySelector(".reel-cap").innerHTML = esc(v.caption).replace(/#([\p{L}\p{N}_]+)/gu, '<span class="htag">#$1</span>');
     feed.appendChild(reel);
   });
   bindFeedEvents(); observeReels();
@@ -1167,9 +1215,11 @@ async function toggleLike(id){
   const v=VIDEOS.find(x=>x.id===id); if(!v) return;
   if(state.liked.has(id)){
     state.liked.delete(id); v.likes=Math.max(0, v.likes-1); syncLikeUI(id);
+    bumpAffinity(v.tags, -3);
     await sb.from("reelio_likes").delete().eq("user_id", ME.id).eq("post_id", id);
   } else {
     state.liked.add(id); v.likes+=1; syncLikeUI(id);
+    bumpAffinity(v.tags, 3);
     await sb.from("reelio_likes").insert({ user_id: ME.id, post_id: id });
   }
 }
@@ -1196,14 +1246,25 @@ async function toggleFollow(userId){
   else await sb.from("reelio_follows").delete().eq("follower_id", ME.id).eq("following_id", userId);
 }
 let reelObserver=null;
+function creditWatch(card, postId){
+  if(!card._watchSince) return;
+  const secs=(Date.now()-card._watchSince)/1000;
+  card._watchSince=0;
+  if(secs<1.5) return;                       // a quick scroll past doesn't count
+  const v=VIDEOS.find(x=>x.id===postId); if(!v) return;
+  bumpAffinity(v.tags, Math.min(secs, 30)*0.15);  // longer watches teach the feed more
+}
+function flushWatch(){
+  $$("#feed .reel-card").forEach(card=>{ if(card._watchSince) creditWatch(card, card.dataset.card); });
+}
 function observeReels(){
   if(reelObserver) reelObserver.disconnect();
   reelObserver=new IntersectionObserver(entries=>{
     entries.forEach(en=>{
       const card=en.target.querySelector(".reel-card"); if(!card) return;
       const vid=card.querySelector("video");
-      if(en.intersectionRatio>=0.65){ card.classList.add("playing"); if(vid) vid.play().catch(()=>{}); }
-      else { card.classList.remove("playing"); if(vid) vid.pause(); }
+      if(en.intersectionRatio>=0.65){ card.classList.add("playing"); card._watchSince=Date.now(); if(vid) vid.play().catch(()=>{}); }
+      else { card.classList.remove("playing"); creditWatch(card, card.dataset.card); if(vid) vid.pause(); }
     });
   }, { root:$("#feed"), threshold:[0.65] });
   $$("#feed .reel").forEach(r=>reelObserver.observe(r));
@@ -1444,7 +1505,7 @@ $("#uploadPost").addEventListener("click", async ()=>{
     if(upErr) throw upErr;
     const mediaUrl=sb.storage.from("reelio-media").getPublicUrl(path).data.publicUrl;
     const caption=$("#uploadCaption").value.trim() || "Fresh off the camera roll.";
-    const tags=$("#uploadTags").value.split(",").map(t=>t.trim().replace(/^#/, "")).filter(Boolean);
+    const tags=parseHashtags(caption);
     const { data, error } = await sb.from("reelio_posts").insert({
       user_id: ME.id, media_url: mediaUrl, media_type: uploadType, caption, tags
     }).select().single();
@@ -1452,7 +1513,7 @@ $("#uploadPost").addEventListener("click", async ()=>{
     const v=postVM(data, 0, 0);
     VIDEOS.unshift(v); state.myPosts.unshift(v);
     resetUploadPicker();
-    $("#uploadCaption").value=""; $("#uploadTags").value="";
+    $("#uploadCaption").value="";
     closeSheets(); switchView("feed"); state.feedTab="foryou";
     $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou"));
     renderFeed(); $("#feed").scrollTop=0; renderProfileGrid(); renderStats(); renderThumbs(VIDEOS);
@@ -2095,7 +2156,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.4.1";
+const APP_VERSION = "1.4.4";
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
 function versionParts(v){ return String(v||"0").split(".").map(n=>parseInt(n,10)||0); }
 function isNewer(remote, local){
