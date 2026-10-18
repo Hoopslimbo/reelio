@@ -8,7 +8,7 @@
    open pages, and its fetch handler never writes a fresher shell or asset
    over a cached one — the network only fills slots that are empty. Bump
    VERSION together with version.json and APP_VERSION in index.html. */
-const VERSION = "1.5.13";
+const VERSION = "1.5.14";
 const CACHE = "reelio-v" + VERSION;
 const CORE = [
   "./manifest.webmanifest",
