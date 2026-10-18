@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.5.14" />
+<meta name="app-version" content="1.5.15" />
 <title>Reelio</title>
 <script>
 /* iOS home-screen viewport gap: on some iPhones the standalone app's
@@ -781,7 +781,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.5.14</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.5.15</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -1112,7 +1112,7 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.14</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.15</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
     </div>
     <div class="setting-row" style="display:block;">
       <div class="sr-main" style="margin-bottom:9px;"><b>Appearance</b><span>Dark is Reelio's classic look. Light flips the whole app — feed, chats, sheets, everything.</span></div>
@@ -1594,7 +1594,7 @@ function renderFeed(){
             ${audio ? `<button class="reel-audio" data-audio="${audio.id}"><span class="disc">${discSVG}</span><span class="ra-title">${esc(audio.title)}</span><span class="ra-by">· @${esc(audioCreator ? audioCreator.username : "")}</span></button>` : (v.videoUrl ? `<div class="reel-audio"><span class="disc">${discSVG}</span><span class="ra-title">Original audio</span><span class="ra-by">· ${esc(v.handle)}</span></div>` : "")}
           </div>
         </div>
-        ${isPhoto ? "" : `<button class="reel-disc" ${audio ? `data-audio="${audio.id}" aria-label="Audio: ${esc(audio.title)}"` : `data-profile="${v.userId}" aria-label="View ${esc(v.author)}'s profile"`}>${avatarHTML(v,"md")}</button>`}
+        ${isPhoto ? "" : `<button class="reel-disc" data-audiodisc ${audio ? `data-audio="${audio.id}" aria-label="Audio: ${esc(audio.title)}"` : `aria-label="Audio"`}>${avatarHTML(v,"md")}</button>`}
         <div class="reel-rail">
           <button class="rail-btn ${liked?"liked":""}" data-like="${v.id}"><span class="ic">${heartSVG}</span><span data-likecount="${v.id}">${fmt(v.likes)}</span></button>
           <button class="rail-btn" data-comments="${v.id}"><span class="ic">${commentSVG}</span><span data-ccount="${v.id}">${fmt(v.commentCount)}</span></button>
@@ -1618,13 +1618,22 @@ function bindFeedEvents(){
   $$("#feed [data-comments]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); openComments(b.dataset.comments); }));
   $$("#feed [data-share]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); sharePost(b.dataset.share, b); }));
   $$("#feed [data-follow]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); toggleFollow(b.dataset.follow); }));
-  $$("#feed [data-audio]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); openAudioSheet(b.dataset.audio); }));
+  /* Audio taps are deliberately inert for now: the spinning disc and the
+     audio line keep their tap handlers wired (and swallow the tap, so it
+     doesn't fall through to pausing the video) but the handlers do
+     nothing — no sheet, no navigation. The audio sheet and
+     openAudioSheet() stay in the app untouched; when audio gets a real
+     action later, wire it up here (e.g. openAudioSheet(b.dataset.audio)
+     for elements that carry a data-audio id). */
+  $$("#feed [data-audio], #feed [data-audiodisc]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); }));
   $$("#feed [data-profile]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); openUserProfile(b.dataset.profile); }));
   $$("#feed .reel-card").forEach(card=>{
     bindReelMedia(card);
     let lastTap=0;
     card.addEventListener("click", e=>{
-      if(e.target.closest("button")) return;
+      /* .reel-audio is included so the plain "Original audio" line (a div,
+         not a button) is inert too — tapping it must not pause the video. */
+      if(e.target.closest("button, .reel-audio")) return;
       const now=Date.now();
       if(now-lastTap<320){ likeWithHeart(card.dataset.card, card, e); lastTap=0; }
       else { lastTap=now; setTimeout(()=>{ if(lastTap && Date.now()-lastTap>=310) togglePlay(card); }, 320); }
@@ -3160,7 +3169,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.5.14";
+const APP_VERSION = "1.5.15";
 const EDGE_FIX_KEY = "reelio-edgefix-154";
 const UPDATE_ATTEMPT_KEY = "reelio-update-attempt"; // sessionStorage only: {v, tries} for the update the user just tapped
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
