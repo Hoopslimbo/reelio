@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.5.10" />
+<meta name="app-version" content="1.5.11" />
 <title>Reelio</title>
 <script>
 /* iOS home-screen viewport gap: on some iPhones the standalone app's
@@ -70,6 +70,12 @@
     --bubble-me:#0e5f56; --bubble-them:#232326;
     --danger:#ff5d5d; --heart:#ff4d6d;
     --radius:14px;
+    /* How far the glued mobile stack (bottom nav + video progress line +
+       caption/rail/disc above it) is raised off the screen's bottom edge.
+       The nav and every overlay offset include the same amount, so the
+       stack moves as one piece and the progress line stays flush with
+       the nav's top edge. */
+    --stack-lift:10px;
     --font:"Avenir Next","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
     --font-display:"Avenir Next","Segoe UI",system-ui,sans-serif;
   }
@@ -193,9 +199,9 @@
   @media (max-width:760px){
     .reel{padding:0; width:100%; max-width:100%; overflow:hidden;}
     .reel-card{max-width:100%; width:100%; height:100%; max-height:none; aspect-ratio:auto; border-radius:0; box-shadow:none;}
-    .reel-meta{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
-    .reel-rail{bottom:calc(189px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
-    .reel-progress{bottom:calc(56px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
+    .reel-meta{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift));}
+    .reel-rail{bottom:calc(189px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift));}
+    .reel-progress{bottom:calc(56px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift));}
     .view{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
     #view-feed{padding-bottom:0;}
   }
@@ -612,7 +618,7 @@
   .reel-disc .avatar{width:100%; height:100%; font-size:15px;}
   .reel-card.playing .reel-disc{animation:discspin 3.4s linear infinite;}
   @media (prefers-reduced-motion: reduce){ .reel-card.playing .reel-disc{animation:none;} }
-  @media (max-width:760px){ .reel-disc{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px)); right:10px;} }
+  @media (max-width:760px){ .reel-disc{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift)); right:10px;} }
   /* Mobile overlay stack — this block MUST stay after every base reel
      rule. The first mobile media query (near the top of the feed styles)
      sets these same bottoms, but the base .reel-meta/.reel-rail/
@@ -633,12 +639,15 @@
      physical screen bottom, the reel card ends with it, but the nav is
      translated down by that same amount to reach the true bottom — so
      without the subtraction the whole stack hovered one vh-gap above
-     the nav, leaving a visible empty band under the progress line. */
+     the nav, leaving a visible empty band under the progress line.
+     The + var(--stack-lift) term raises this whole stack (and the nav
+     itself, via its translateY below) by that amount off the bottom
+     edge — the pieces stay glued, just sitting a little higher. */
   @media (max-width:760px){
-    .reel-meta{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
-    .reel-rail{bottom:calc(189px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
-    .reel-progress{bottom:calc(56px + env(safe-area-inset-bottom) - var(--vh-gap, 0px));}
-    .reel-disc{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px)); right:10px;}
+    .reel-meta{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift));}
+    .reel-rail{bottom:calc(189px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift));}
+    .reel-progress{bottom:calc(56px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift));}
+    .reel-disc{bottom:calc(59px + env(safe-area-inset-bottom) - var(--vh-gap, 0px) + var(--stack-lift)); right:10px;}
   }
   .reel-end{background:#000;}
   .end-inner{display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:24px; color:#fff;}
@@ -721,14 +730,15 @@
      shell already runs var(--app-h) tall so the feed paints into the
      strip; these rules move the fixed pieces the same amount so nothing
      stops short or floats: the bottom nav is nudged down to the true
-     bottom edge (its translucent gradient and the home indicator then sit
+     bottom edge, minus --stack-lift so it rides a little higher with
+     the rest of the feed's bottom stack (its translucent gradient and the home indicator then sit
      over the video, no black band underneath), full-screen overlays
      stretch to cover the strip, and bottom sheets land on the true
      bottom too. With the var unset every value collapses to 0 and the
      layout is exactly what it was. */
   .scrim,.auth-gate,.boot-splash,.call-ui{bottom:calc(-1 * var(--vh-gap, 0px));}
   @media (max-width:760px){
-    .bottom-nav{transform:translateY(var(--vh-gap, 0px));}
+    .bottom-nav{transform:translateY(calc(var(--vh-gap, 0px) - var(--stack-lift)));}
     .sheet{bottom:calc(-1 * var(--vh-gap, 0px));}
   }
 </style>
@@ -758,7 +768,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.5.10</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.5.11</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -1089,7 +1099,7 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.10</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.11</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
     </div>
     <div class="setting-row" style="display:block;">
       <div class="sr-main" style="margin-bottom:9px;"><b>Appearance</b><span>Dark is Reelio's classic look. Light flips the whole app — feed, chats, sheets, everything.</span></div>
@@ -3086,7 +3096,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.5.10";
+const APP_VERSION = "1.5.11";
 const EDGE_FIX_KEY = "reelio-edgefix-154";
 const UPDATE_ATTEMPT_KEY = "reelio-update-attempt"; // sessionStorage only: {v, tries} for the update the user just tapped
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
