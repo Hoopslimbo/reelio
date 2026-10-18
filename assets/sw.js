@@ -1,6 +1,8 @@
-/* Reelio service worker — network-first so updates land without reinstalling.
-   Bump VERSION together with version.json and APP_VERSION in index.html. */
-const VERSION = "1.4.4";
+/* Reelio service worker — cache-first shell so the app NEVER updates itself
+   in the background. A new deploy only takes over when the user taps Update
+   (the page clears caches and cache-busts). Bump VERSION together with
+   version.json and APP_VERSION in index.html. */
+const VERSION = "1.4.6";
 const CACHE = "reelio-v" + VERSION;
 const CORE = [
   "./manifest.webmanifest",
@@ -47,17 +49,22 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Page navigations + the app shell: network-first so a new deploy
-  // is picked up on the next launch, cache only as an offline fallback.
+  // Page navigations + the app shell: cache-first. The cached shell keeps
+  // serving until the user taps Update, so reopening Reelio never silently
+  // swaps in a new version. The network is only a fallback for a first load
+  // (or offline fill), and that response becomes the cached shell.
   if (req.mode === "navigate" || url.pathname.endsWith("/") || url.pathname.endsWith("index.html")) {
     event.respondWith(
-      fetch(req, { cache: "no-store" })
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => caches.match(req))
+      caches.match(req, { ignoreSearch: true }).then((cached) => {
+        if (cached) return cached;
+        return fetch(req, { cache: "no-store" })
+          .then((res) => {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+            return res;
+          })
+          .catch(() => caches.match(req));
+      })
     );
     return;
   }
