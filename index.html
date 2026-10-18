@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.5.6" />
+<meta name="app-version" content="1.5.7" />
 <title>Reelio</title>
 <script>
 /* iOS home-screen viewport gap: on some iPhones the standalone app's
@@ -193,9 +193,9 @@
   @media (max-width:760px){
     .reel{padding:0; width:100%; max-width:100%; overflow:hidden;}
     .reel-card{max-width:100%; width:100%; height:100%; max-height:none; aspect-ratio:auto; border-radius:0; box-shadow:none;}
-    .reel-meta{bottom:calc(74px + env(safe-area-inset-bottom));}
-    .reel-rail{bottom:calc(204px + env(safe-area-inset-bottom));}
-    .reel-progress{bottom:calc(66px + env(safe-area-inset-bottom));}
+    .reel-meta{bottom:calc(64px + env(safe-area-inset-bottom));}
+    .reel-rail{bottom:calc(194px + env(safe-area-inset-bottom));}
+    .reel-progress{bottom:calc(56px + env(safe-area-inset-bottom));}
     .view{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
     #view-feed{padding-bottom:0;}
   }
@@ -205,12 +205,12 @@
   @media (prefers-reduced-motion: reduce){ .reel-card.playing img.poster{animation:none;} }
   .reel-shade{position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.18) 34%, rgba(0,0,0,0) 55%); pointer-events:none;}
   .reel-meta{position:absolute; left:14px; right:78px; bottom:12px; color:#fff; z-index:5;}
-  .reel-author{display:flex; align-items:center; gap:7px; font-weight:800; font-size:15.5px; text-shadow:0 1px 6px rgba(0,0,0,.55);}
-  .follow-chip{font-size:12.5px; font-weight:700; border:1.5px solid var(--teal-bright); color:var(--teal-bright); border-radius:7px; padding:3px 9px; background:rgba(0,0,0,.25);}
+  .reel-author{display:flex; align-items:center; gap:7px; font-weight:600; font-size:15.5px; text-shadow:0 1px 6px rgba(0,0,0,.55);}
+  .follow-chip{font-size:12.5px; font-weight:600; border:1.5px solid var(--teal-bright); color:var(--teal-bright); border-radius:7px; padding:3px 9px; background:rgba(0,0,0,.25);}
   .follow-chip.following{border-color:rgba(255,255,255,.5); color:#fff;}
   .reel-cap{margin-top:9px; font-size:14px; line-height:1.25; text-shadow:0 1px 6px rgba(0,0,0,.6); max-width:46ch;}
-  .reel-cap .htag{color:var(--teal-bright); font-weight:700;}
-  .reel-tags{margin-top:3px; font-size:13px; font-weight:700; color:#dffcf6; text-shadow:0 1px 6px rgba(0,0,0,.6);}
+  .reel-cap .htag{color:var(--teal-bright); font-weight:600;}
+  .reel-tags{margin-top:3px; font-size:13px; font-weight:600; color:#dffcf6; text-shadow:0 1px 6px rgba(0,0,0,.6);}
   .reel-tags span{margin-right:9px;}
   .reel-rail{position:absolute; right:10px; bottom:190px; z-index:6; display:flex; flex-direction:column; align-items:center; gap:15px;}
   .rail-btn{display:flex; flex-direction:column; align-items:center; gap:3px; color:#fff; font-size:12px; font-weight:700; text-shadow:0 1px 5px rgba(0,0,0,.5);}
@@ -497,9 +497,9 @@
        through its safe-area padding, so the strip behind the home
        indicator shows the video too instead of a solid black band. Do not
        give it an opaque background again. */
-    .bottom-nav{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:60; background:linear-gradient(to top, rgba(4,4,5,.6), rgba(4,4,5,.36) 58%, rgba(4,4,5,.12)); backdrop-filter:blur(18px) saturate(1.25); -webkit-backdrop-filter:blur(18px) saturate(1.25); border-top:1px solid rgba(255,255,255,.07); padding:6px 8px calc(6px + env(safe-area-inset-bottom)); justify-content:space-around;}
+    .bottom-nav{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:60; background:linear-gradient(to top, rgba(4,4,5,.6), rgba(4,4,5,.36) 58%, rgba(4,4,5,.12)); backdrop-filter:blur(18px) saturate(1.25); -webkit-backdrop-filter:blur(18px) saturate(1.25); border-top:1px solid rgba(255,255,255,.07); padding:3px 8px calc(6px + env(safe-area-inset-bottom)); justify-content:space-around;}
     @media (prefers-color-scheme: light){ .bottom-nav{background:linear-gradient(to top, rgba(255,255,255,.8), rgba(255,255,255,.55) 58%, rgba(255,255,255,.28)); border-top-color:rgba(0,0,0,.06);} }
-    .bottom-nav button{display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; font-weight:600; color:var(--text-2); padding:4px 10px; position:relative;}
+    .bottom-nav button{display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; font-weight:600; color:var(--text-2); padding:3px 10px; position:relative;}
     .bottom-nav button.on{color:var(--text);}
     .bottom-nav svg{width:24px; height:24px;}
     .bottom-nav .dot{position:absolute; top:0; right:8px; background:var(--heart); color:#fff; font-size:10px; font-weight:800; min-width:17px; height:17px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 4px;}
@@ -587,7 +587,7 @@
   }
 
   /* ---------- Audio on reels ---------- */
-  .reel-audio{display:flex; align-items:center; gap:6px; margin-top:8px; color:#fff; font-size:13px; font-weight:600; padding:0; max-width:100%; text-align:left; text-shadow:0 1px 6px rgba(0,0,0,.6);}
+  .reel-audio{display:flex; align-items:center; gap:6px; margin-top:8px; color:#fff; font-size:13px; font-weight:500; padding:0; max-width:100%; text-align:left; text-shadow:0 1px 6px rgba(0,0,0,.6);}
   .reel-audio .disc{width:16px; height:16px; flex:none; display:flex;}
   .reel-audio .disc svg{width:16px; height:16px;}
   .reel-card.playing .reel-audio .disc svg{animation:discspin 3.4s linear infinite;}
@@ -612,7 +612,7 @@
   .reel-disc .avatar{width:100%; height:100%; font-size:15px;}
   .reel-card.playing .reel-disc{animation:discspin 3.4s linear infinite;}
   @media (prefers-reduced-motion: reduce){ .reel-card.playing .reel-disc{animation:none;} }
-  @media (max-width:760px){ .reel-disc{bottom:calc(74px + env(safe-area-inset-bottom)); right:10px;} }
+  @media (max-width:760px){ .reel-disc{bottom:calc(64px + env(safe-area-inset-bottom)); right:10px;} }
   /* Mobile overlay lift — this block MUST stay after every base reel rule.
      The first mobile media query (near the top of the feed styles) sets
      these same bottoms, but the base .reel-meta/.reel-rail/.reel-progress
@@ -621,12 +621,16 @@
      @handle, title and audio line kept looking cut off. These late rules
      are the ones that actually apply: on phones the whole overlay stack
      (caption block, action rail, progress bar, audio disc) sits clearly
-     above the bottom nav. */
+     above the bottom nav. The offsets hug the nav on purpose: the trimmed
+     mobile nav is ~54px tall above the safe area, so the progress bar
+     rests 2px over its top edge, the caption block 8px above the bar,
+     and the rail/disc came down by the same 10px — no empty band between
+     the post info and the nav. */
   @media (max-width:760px){
-    .reel-meta{bottom:calc(74px + env(safe-area-inset-bottom));}
-    .reel-rail{bottom:calc(204px + env(safe-area-inset-bottom));}
-    .reel-progress{bottom:calc(66px + env(safe-area-inset-bottom));}
-    .reel-disc{bottom:calc(74px + env(safe-area-inset-bottom)); right:10px;}
+    .reel-meta{bottom:calc(64px + env(safe-area-inset-bottom));}
+    .reel-rail{bottom:calc(194px + env(safe-area-inset-bottom));}
+    .reel-progress{bottom:calc(56px + env(safe-area-inset-bottom));}
+    .reel-disc{bottom:calc(64px + env(safe-area-inset-bottom)); right:10px;}
   }
   .reel-end{background:#000;}
   .end-inner{display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:24px; color:#fff;}
@@ -3074,7 +3078,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.5.6";
+const APP_VERSION = "1.5.7";
 const EDGE_FIX_KEY = "reelio-edgefix-154";
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
 function versionParts(v){ return String(v||"0").split(".").map(n=>parseInt(n,10)||0); }
