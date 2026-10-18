@@ -1,12 +1,14 @@
 /* Reelio service worker — STRICTLY manual updates. A new deploy only ever
-   takes over when the user taps Update on the banner or Check for Updates
-   in Settings; that tap is what makes the page clear caches and cache-bust.
-   A worker that activates on its own (browsers activate a waiting worker
-   once every app window has closed — no tap involved) must change NOTHING
-   the user sees: it keeps older caches and keeps serving the shell the
-   user last chose. Bump VERSION together with version.json and
-   APP_VERSION in index.html. */
-const VERSION = "1.5.2";
+   takes over when the user taps Update (the banner button, or the
+   Settings button after it relabels to "Update to vX"); that tap is what
+   makes the page clear caches and cache-bust. A worker that activates on
+   its own (browsers activate a waiting worker once every app window has
+   closed — no tap involved) must change NOTHING the user sees: it keeps
+   older caches, keeps serving the shell the user last chose, never claims
+   open pages, and its fetch handler never writes a fresher shell or asset
+   over a cached one — the network only fills slots that are empty. Bump
+   VERSION together with version.json and APP_VERSION in index.html. */
+const VERSION = "1.5.3";
 const CACHE = "reelio-v" + VERSION;
 const CORE = [
   "./manifest.webmanifest",
@@ -27,12 +29,12 @@ self.addEventListener("install", (event) => {
   );
 });
 
-self.addEventListener("activate", (event) => {
-  // Do NOT delete older reelio caches here. If this worker activated on
-  // its own, the older cache still holds the shell the user last chose,
-  // and the fetch handler below keeps serving it. Caches are cleared only
-  // by the page, only when the user taps Update.
-  event.waitUntil(self.clients.claim());
+self.addEventListener("activate", () => {
+  // Do NOT delete older reelio caches here, and do NOT clients.claim().
+  // If this worker activated on its own, the older cache still holds the
+  // shell the user last chose, and the fetch handler below keeps serving
+  // it. Caches are cleared only by the page, only when the user taps
+  // Update.
 });
 
 self.addEventListener("message", (event) => {
@@ -66,29 +68,31 @@ self.addEventListener("fetch", (event) => {
         .then((hit) => hit || caches.match(req, { ignoreSearch: true }))
         .then((cached) => {
           if (cached) return cached;
-          return fetch(req, { cache: "no-store" })
-            .then((res) => {
-              const copy = res.clone();
-              caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-              return res;
-            })
-            .catch(() => caches.match(req));
+          // No cache anywhere holds this shell: pass the network response
+          // through WITHOUT writing it into a cache. Caching it here would
+          // silently swap in whatever version the server is newest on —
+          // a background install with no tap.
+          return fetch(req, { cache: "no-store" }).catch(() => caches.match(req));
         })
     );
     return;
   }
 
-  // Everything else (icons, images): stale-while-revalidate.
+  // Everything else (icons, images): cache-first, across every reelio
+  // cache. A cached asset is NEVER swapped for a fresher network copy in
+  // the background (no stale-while-revalidate) — the network only fills a
+  // slot that is completely empty, so new asset versions can only arrive
+  // with an update the user tapped (the page clears all caches then).
   event.respondWith(
     caches.match(req).then((cached) => {
-      const network = fetch(req).then((res) => {
+      if (cached) return cached;
+      return fetch(req).then((res) => {
         if (res && res.ok && url.origin === self.location.origin) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
         }
         return res;
       }).catch(() => cached);
-      return cached || network;
     })
   );
 });
