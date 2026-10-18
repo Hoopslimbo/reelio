@@ -1,1 +1,0 @@
-{"build":"2026-10-18.20","notes":"The video progress line now sits directly on top of the bottom nav with no gap between them, and the @handle, title and audio line rest right on the progress line — the whole stack meets the nav cleanly, including on iPhones where the app window stops short of the screen bottom.","released":"2026-10-18","version":"1.5.10"}
