@@ -8,12 +8,13 @@
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
 <link rel="manifest" href="assets/manifest.webmanifest" />
-<meta name="theme-color" content="#000000" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f4f2" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.4.4" />
+<meta name="app-version" content="1.4.5" />
 <title>Reelio</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -89,10 +90,17 @@
   .avatar.xl{width:96px; height:96px; font-size:36px;}
 
   /* ---------- Main / views ---------- */
-  .main{position:relative; min-width:0; max-width:100%; overflow-x:hidden; height:100dvh; background:var(--bg); padding-top:env(safe-area-inset-top); box-sizing:border-box;}
-  /* Dark scheme is the default: keep the strip behind the status bar pure
-     black so it matches the feed exactly — no visible seam at the top. */
-  @media (prefers-color-scheme: dark){ .main{background:#000;} }
+  .main{position:relative; min-width:0; max-width:100%; overflow-x:hidden; height:100dvh; background:var(--bg); box-sizing:border-box;}
+  /* Dark scheme is the default. One continuous black from behind the status
+     bar down through the feed: html/body are pure black and .main paints no
+     band of its own — there is deliberately no safe-area padding strip on
+     .main. Each view's own header carries the env(safe-area-inset-top)
+     padding instead (.feed-top, .search-wrap, .chat-list-head, .thread-head,
+     .profile-inner), so no separate bar element ever shows. */
+  @media (prefers-color-scheme: dark){
+    html,body{background:#000;}
+    .main{background:transparent;}
+  }
   .view{display:none; height:100%; max-width:100%; overflow-x:hidden;}
   .view.active{display:flex; flex-direction:column;}
 
@@ -174,7 +182,7 @@
   .page-head{padding:22px 26px 8px; max-width:1060px; width:100%; margin:0 auto;}
   .page-head h1{font-size:27px; margin:0 0 4px; letter-spacing:-.02em; font-family:var(--font-display);}
   .page-head p{margin:0; color:var(--text-2); font-size:14.5px;}
-  .search-wrap{max-width:1060px; width:100%; margin:0 auto; padding:18px 26px 2px;}
+  .search-wrap{max-width:1060px; width:100%; margin:0 auto; padding:calc(18px + env(safe-area-inset-top)) 26px 2px;}
   .searchbar{display:flex; align-items:center; gap:10px; background:var(--bg-3); border:1px solid var(--line-soft); border-radius:12px; padding:0 14px; width:100%;}
   .searchbar svg{width:19px; height:19px; color:var(--text-3); flex:none;}
   .searchbar input{flex:1; border:none; background:none; outline:none; font-size:15.5px; padding:13px 0; color:var(--text); min-width:0;}
@@ -202,7 +210,7 @@
   .inbox-wrap{flex:1; display:grid; grid-template-columns:342px minmax(0,1fr); min-height:0;}
   @media (max-width:760px){ .inbox-wrap{grid-template-columns:minmax(0,1fr);} }
   .chat-list{border-right:1px solid var(--line-soft); display:flex; flex-direction:column; min-height:0; background:var(--bg);}
-  .chat-list-head{padding:20px 18px 10px; display:flex; align-items:center; justify-content:space-between;}
+  .chat-list-head{padding:calc(20px + env(safe-area-inset-top)) 18px 10px; display:flex; align-items:center; justify-content:space-between;}
   .chat-list-head h1{font-size:23px; margin:0; font-family:var(--font-display); letter-spacing:-.02em;}
   .icon-btn{width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-2);}
   .icon-btn:hover{background:var(--bg-3); color:var(--text);}
@@ -226,7 +234,7 @@
 
   /* Thread */
   .thread{display:flex; flex-direction:column; min-height:0; min-width:0; background:var(--bg);}
-  .thread-head{display:flex; align-items:center; gap:11px; padding:12px 16px; border-bottom:1px solid var(--line-soft); background:var(--bg); z-index:5;}
+  .thread-head{display:flex; align-items:center; gap:11px; padding:calc(12px + env(safe-area-inset-top)) 16px 12px; border-bottom:1px solid var(--line-soft); background:var(--bg); z-index:5;}
   .thread-head .th-main{flex:1; min-width:0; text-align:left; padding:2px 0;}
   .thread-head .th-main b{display:block; font-size:16.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .thread-head .th-main span{font-size:12.5px; color:var(--text-2); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -294,7 +302,7 @@
 
   /* ---------- Profile ---------- */
   .profile-scroll{flex:1; overflow-y:auto;}
-  .profile-inner{max-width:880px; margin:0 auto; padding:30px 26px 40px; width:100%;}
+  .profile-inner{max-width:880px; margin:0 auto; padding:calc(30px + env(safe-area-inset-top)) 26px 40px; width:100%;}
   .profile-top{display:flex; gap:26px; align-items:center; flex-wrap:wrap;}
   .profile-id{min-width:0;}
   .profile-id h1{font-size:24px; margin:0; font-family:var(--font-display); letter-spacing:-.02em; display:flex; align-items:center; gap:8px;}
@@ -510,7 +518,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.4.4</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.4.5</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -830,7 +838,7 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.4.4</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.4.5</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
     </div>
     <div class="setting-row">
       <div class="sr-main"><b>Check for Updates</b><span>Reelio also checks automatically every time it opens.</span></div>
@@ -1452,7 +1460,7 @@ $("#profileSave").addEventListener("click", async ()=>{
     const ext=(pendingAvatarFile.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";
     const path=`avatars/${ME.id}-${Date.now()}.${ext}`;
     const { error: upErr } = await sb.storage.from("reelio-media").upload(path, pendingAvatarFile, { upsert:true, contentType: pendingAvatarFile.type || "image/jpeg" });
-    if(upErr){ toast("Photo upload failed"); return; }
+    if(upErr){ toast(uploadErrorMessage(upErr)); return; }
     avatarUrl=sb.storage.from("reelio-media").getPublicUrl(path).data.publicUrl;
   }
   const { error } = await sb.from("reelio_profiles").update({ display_name:name||ME.display_name, username, bio, avatar_url:avatarUrl }).eq("id", ME.id);
@@ -1465,6 +1473,28 @@ $("#profileSave").addEventListener("click", async ()=>{
 });
 
 /* ================= CREATE POST ================= */
+/* Uploads go to the reelio-media bucket. Storage RLS decides who may write:
+   with no INSERT policy for signed-in users, Supabase answers 403 "new row
+   violates row-level security policy" and every post (and avatar) fails.
+   uploadErrorMessage() turns the raw storage errors into plain explanations
+   instead of a generic "Post failed". The fix on the server side is in
+   fix-storage-policies.sql next to this file. */
+async function uploadToBucket(path, file, fallbackType){
+  const opts={ cacheControl:"3600", contentType:file.type || fallbackType || "application/octet-stream" };
+  let res=await sb.storage.from("reelio-media").upload(path, file, opts);
+  if(res.error && /already exists/i.test(res.error.message||"")){
+    res=await sb.storage.from("reelio-media").upload(path, file, { ...opts, upsert:true });
+  }
+  return res;
+}
+function uploadErrorMessage(err){
+  const m=(err && err.message) || "";
+  if(/row-level security|AccessDenied|Unauthorized/i.test(m)) return "Uploads aren't enabled on the server yet — the reelio-media bucket needs an upload policy for signed-in users.";
+  if(/Bucket not found/i.test(m)) return "The reelio-media storage bucket is missing on the server.";
+  if(/payload too large|exceeded the maximum|file size/i.test(m)) return "That file is too big for the upload limit.";
+  if(/invalid mime|mime type/i.test(m)) return "That file type isn't allowed.";
+  return m ? "Post failed — "+m : "Post failed — try again";
+}
 let uploadURL=null, uploadType=null, uploadFile=null;
 function openUpload(){ openSheet("uploadSheet"); }
 $("#sideUpload").addEventListener("click", openUpload);
@@ -1499,9 +1529,10 @@ $("#uploadPost").addEventListener("click", async ()=>{
   if(!uploadFile || !uploadType){ toast("Pick a photo or video first"); return; }
   const btn=$("#uploadPost"); btn.disabled=true; btn.textContent="Posting…";
   try{
-    const ext=(uploadFile.name.split(".").pop()||(uploadType==="video"?"mp4":"jpg")).toLowerCase();
+    let ext=(uploadFile.name.split(".").pop()||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+    if(!ext || ext.length>5) ext = uploadType==="video" ? "mp4" : "jpg";
     const path=`posts/${ME.id}/${Date.now()}.${ext}`;
-    const { error: upErr } = await sb.storage.from("reelio-media").upload(path, uploadFile);
+    const { error: upErr } = await uploadToBucket(path, uploadFile, uploadType==="video" ? "video/mp4" : "image/jpeg");
     if(upErr) throw upErr;
     const mediaUrl=sb.storage.from("reelio-media").getPublicUrl(path).data.publicUrl;
     const caption=$("#uploadCaption").value.trim() || "Fresh off the camera roll.";
@@ -1519,7 +1550,7 @@ $("#uploadPost").addEventListener("click", async ()=>{
     renderFeed(); $("#feed").scrollTop=0; renderProfileGrid(); renderStats(); renderThumbs(VIDEOS);
     toast("Posted — it's live at the top of the feed");
   }catch(err){
-    toast("Post failed — try again");
+    toast(uploadErrorMessage(err));
   }finally{
     btn.disabled=false; btn.textContent="Post";
   }
@@ -2156,7 +2187,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.4.4";
+const APP_VERSION = "1.4.5";
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
 function versionParts(v){ return String(v||"0").split(".").map(n=>parseInt(n,10)||0); }
 function isNewer(remote, local){
