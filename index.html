@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.5.7" />
+<meta name="app-version" content="1.5.9" />
 <title>Reelio</title>
 <script>
 /* iOS home-screen viewport gap: on some iPhones the standalone app's
@@ -527,7 +527,7 @@
   .auth-submit[disabled]{opacity:.55; pointer-events:none;}
   .boot-splash{position:fixed; inset:0; z-index:290; background:#000; display:flex; align-items:center; justify-content:center;}
   .boot-splash.hide{display:none;}
-  .boot-splash .ring{width:64px; height:64px; border-width:8px; animation:bootpulse 1.2s ease-in-out infinite alternate;}
+  .boot-splash .boot-icon{width:104px; height:104px; display:block; animation:bootpulse 1.2s ease-in-out infinite alternate;}
   @keyframes bootpulse{from{transform:scale(.94); opacity:.75;} to{transform:scale(1); opacity:1;}}
 
   /* ---------- Calls ---------- */
@@ -750,7 +750,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.5.5</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.5.9</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -1012,7 +1012,7 @@
 </section>
 
 <!-- ============ BOOT SPLASH ============ -->
-<div class="boot-splash" id="bootSplash"><div class="ring" aria-hidden="true"></div></div>
+<div class="boot-splash" id="bootSplash"><img class="boot-icon" src="assets/icon-512.png" alt="Reelio" /></div>
 
 <!-- ============ AUTH GATE ============ -->
 <div class="auth-gate" id="authGate">
@@ -1081,7 +1081,7 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.5</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.9</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
     </div>
     <div class="setting-row" style="display:block;">
       <div class="sr-main" style="margin-bottom:9px;"><b>Appearance</b><span>Dark is Reelio's classic look. Light flips the whole app — feed, chats, sheets, everything.</span></div>
@@ -3078,8 +3078,9 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.5.7";
+const APP_VERSION = "1.5.9";
 const EDGE_FIX_KEY = "reelio-edgefix-154";
+const UPDATE_ATTEMPT_KEY = "reelio-update-attempt"; // sessionStorage only: {v, tries} for the update the user just tapped
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
 function versionParts(v){ return String(v||"0").split(".").map(n=>parseInt(n,10)||0); }
 function isNewer(remote, local){
@@ -3100,7 +3101,13 @@ function setUpdateStatus(msg, ok){
   el.textContent=msg||""; el.classList.toggle("show", !!msg); el.classList.toggle("ok", !!ok);
 }
 async function fetchRemoteVersion(){
-  const res = await fetch("assets/version.json?t="+Date.now(), { cache:"no-store" });
+  // version.json must ALWAYS come from the network: a one-time query
+  // (timestamp + random nonce, so the URL has never been requested before)
+  // on top of cache:"no-store". iOS keeps a separate, extra-sticky cache
+  // for home-screen apps and a reused query string can be answered from
+  // it without ever touching the network — a brand-new URL cannot.
+  const bust = "t="+Date.now()+"&r="+Math.random().toString(36).slice(2,10);
+  const res = await fetch("assets/version.json?"+bust, { cache:"no-store" });
   if(!res.ok) throw new Error("version check failed");
   return res.json();
 }
@@ -3144,32 +3151,63 @@ function disarmSettingsUpdate(){
   delete btn.dataset.pending;
   btn.textContent="Check";
 }
-async function hardReloadFresh(){
-  // Primary update path for home-screen installs: clear Cache Storage,
-  // then navigate to a cache-busted URL so the browser fetches the new
-  // index.html from the network instead of any HTTP/PWA cache. This works
-  // even where the service worker (in assets/) cannot control the root page.
-  try{ if("caches" in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); } }catch(e){}
+async function forceFreshReload(targetVersion){
+  // THE install. Every step is awaited, in order, so nothing races the
+  // navigation (the old flow could lose to a plain location.reload() from
+  // the controllerchange listener, which quietly re-served the old shell
+  // and cancelled the cache-busted navigation — updates "never worked").
+  //
+  // 1) Unregister EVERY service worker registration for this origin and
+  //    wait for it to finish. The worker lives in assets/, so it can never
+  //    control this root page — but a stale registration (from this or an
+  //    older layout) can pin an old shell, and iOS keeps home-screen
+  //    registrations alive across launches. Removing them all, BEFORE
+  //    navigating, is the only way to be sure nothing intercepts or
+  //    re-serves the reload.
   try{
-    const params=new URLSearchParams(window.location.search);
-    params.set("v", pendingVersion || APP_VERSION);
-    params.set("t", Date.now()+"");
-    location.replace(window.location.pathname + "?" + params.toString() + window.location.hash);
-  }catch(e){ location.reload(); }
+    if("serviceWorker" in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister().catch(()=>false)));
+    }
+  }catch(e){}
+  // 2) Delete every Cache Storage cache, and wait for that too.
+  try{
+    if("caches" in window){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k).catch(()=>false)));
+    }
+  }catch(e){}
+  // 3) Remember what we're updating TO (this session only). When the page
+  //    comes back, initUpdates compares it against the APP_VERSION that
+  //    actually loaded: a match confirms the update landed; a mismatch
+  //    means iOS served its pinned copy anyway, and the reload is retried
+  //    once with a fresh one-time URL instead of failing silently.
+  try{
+    const prev = JSON.parse(sessionStorage.getItem(UPDATE_ATTEMPT_KEY) || "null");
+    const tries = (prev && prev.v === targetVersion) ? (prev.tries||0)+1 : 1;
+    sessionStorage.setItem(UPDATE_ATTEMPT_KEY, JSON.stringify({ v: targetVersion || null, tries }));
+  }catch(e){}
+  // 4) Navigate to a one-time URL: version + timestamp + a random nonce.
+  //    This exact URL has never been requested, so it has no entry in any
+  //    HTTP cache — including the separate, extra-sticky cache iOS keeps
+  //    for home-screen apps — and the browser must fetch index.html from
+  //    the network. (A plain location.reload() re-requests the pinned
+  //    start URL, which is exactly what iOS answers from that cache.)
+  const params = new URLSearchParams(window.location.search);
+  params.set("v", targetVersion || APP_VERSION);
+  params.set("t", Date.now()+"");
+  params.set("r", Math.random().toString(36).slice(2,10));
+  const url = window.location.pathname + "?" + params.toString() + window.location.hash;
+  try{ location.replace(url); }catch(e){ location.href = url; }
 }
 async function applyUpdate(){
   if(updateApplying) return;
   updateApplying = true;
   const btn=$("#updateNowBtn"); if(btn) btn.textContent="Updating…";
-  try{
-    if(waitingSW || (swReg && swReg.waiting)){
-      const w = waitingSW || swReg.waiting;
-      w.postMessage({ type:"SKIP_WAITING" });
-      setTimeout(hardReloadFresh, 1400); // fallback if controllerchange doesn't fire
-      return;
-    }
-  }catch(e){}
-  await hardReloadFresh();
+  const checkBtn=$("#checkUpdateBtn"); if(checkBtn && checkBtn.dataset.pending==="1") checkBtn.textContent="Updating…";
+  const target = (pendingVersion && pendingVersion!=="sw") ? pendingVersion : null;
+  setUpdateStatus("Updating — clearing the old copy and loading the new version…");
+  await forceFreshReload(target);
 }
 function trackInstallingWorker(worker){
   if(!worker) return;
@@ -3181,7 +3219,37 @@ function trackInstallingWorker(worker){
 }
 async function initUpdates(){
   // Clean the cache-bust params left by an update reload, without reloading.
-  try{ const p=new URLSearchParams(window.location.search); if(p.has("t")){ p.delete("t"); p.delete("v"); p.delete("edgefix"); const qs=p.toString(); history.replaceState(null, "", window.location.pathname + (qs ? "?"+qs : "") + window.location.hash); } }catch(e){}
+  try{ const p=new URLSearchParams(window.location.search); if(p.has("t")){ p.delete("t"); p.delete("v"); p.delete("r"); p.delete("edgefix"); const qs=p.toString(); history.replaceState(null, "", window.location.pathname + (qs ? "?"+qs : "") + window.location.hash); } }catch(e){}
+  // If this load is the result of an Update tap, verify it actually
+  // landed. The attempt marker lives in sessionStorage, set by
+  // forceFreshReload just before it navigated here.
+  try{
+    const attempt = JSON.parse(sessionStorage.getItem(UPDATE_ATTEMPT_KEY) || "null");
+    if(attempt && attempt.v){
+      if(!isNewer(attempt.v, APP_VERSION)){
+        // The running version is the one the user tapped to install.
+        sessionStorage.removeItem(UPDATE_ATTEMPT_KEY);
+        setTimeout(()=>toast("Updated — you're on Reelio v"+APP_VERSION+" now"), 500);
+      } else if((attempt.tries||0) < 2){
+        // Still the OLD version: iOS handed back its pinned copy of the
+        // shell despite the cache-busted URL. Retry the forced reload
+        // once with a fresh one-time URL. This is still the update the
+        // user tapped for completing — not a background install.
+        updateApplying = true;
+        forceFreshReload(attempt.v);
+        return; // navigating away; everything below re-runs on the fresh load
+      } else {
+        // Even the retry came back old. Stop looping and say so where
+        // the user can see it, instead of another silent no-op.
+        sessionStorage.removeItem(UPDATE_ATTEMPT_KEY);
+        pendingVersion = attempt.v;
+        setTimeout(()=>{
+          setUpdateStatus("The update still isn't loading on this device — iOS is holding on to the old copy. Fully close Reelio, reopen it, and tap Check again. If it still shows v"+APP_VERSION+" afterwards, deleting the home-screen icon and re-adding Reelio from the site will always work.");
+          showUpdateBanner(attempt.v);
+        }, 500);
+      }
+    }
+  }catch(e){}
   /* One-time black-bar migration (v1.5.4). When a home-screen icon is first
      added, iOS pins a launch token set for the app (start URL, status-bar
      style) plus its own page snapshot, and the app's Cache Storage gained
@@ -3224,10 +3292,13 @@ async function initUpdates(){
   const sb2=$("#sideSettingsBtn"); if(sb2) sb2.addEventListener("click", openSettings);
   const so=$("#settingsSignOutBtn"); if(so) so.addEventListener("click", async ()=>{ closeSheets(); await doSignOut(); });
   if("serviceWorker" in navigator){
-    // Reload only when the user actually tapped Update (applyUpdate sets
-    // updateApplying). A waiting worker taking control on its own must
-    // never reload the app in the background.
-    navigator.serviceWorker.addEventListener("controllerchange", ()=>{ if(updateApplying) location.reload(); });
+    // No reload from here, ever. A plain location.reload() re-requests
+    // the pinned start URL, which iOS happily answers from its
+    // home-screen cache — it used to fire mid-update and cancel the
+    // cache-busted navigation, which is why tapped updates silently
+    // landed back on the old version. applyUpdate owns the navigation:
+    // it unregisters every worker first, then navigates itself.
+    navigator.serviceWorker.addEventListener("controllerchange", ()=>{ /* navigation is owned by applyUpdate/forceFreshReload */ });
     navigator.serviceWorker.register("assets/sw.js").then(reg=>{
       swReg = reg;
       if(reg.waiting && navigator.serviceWorker.controller){ waitingSW = reg.waiting; showUpdateBanner(null); }
