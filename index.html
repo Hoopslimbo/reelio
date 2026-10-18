@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.5.15" />
+<meta name="app-version" content="1.5.16" />
 <title>Reelio</title>
 <script>
 /* iOS home-screen viewport gap: on some iPhones the standalone app's
@@ -781,7 +781,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.5.15</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.5.16</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -1112,7 +1112,7 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.15</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.16</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
     </div>
     <div class="setting-row" style="display:block;">
       <div class="sr-main" style="margin-bottom:9px;"><b>Appearance</b><span>Dark is Reelio's classic look. Light flips the whole app — feed, chats, sheets, everything.</span></div>
@@ -1518,6 +1518,53 @@ async function loadPosts(){
   seedAffinityFromLikes();
   rebuildTagCounts();
   renderFeed(); renderThumbs(VIDEOS);
+  landOnSharedPost();
+}
+/* Deep links: a shared link (…/?post=<id>, built by postLink) lands on
+   that exact post. Runs once, on the first feed load: if the post is
+   already in the feed, scroll straight to it; if it's older than the
+   newest posts the feed loads, fetch it on its own and put it in. The
+   param is removed from the address bar afterwards so a refresh or a
+   later re-render doesn't yank the feed back to it. */
+let sharedPostLanded=false;
+async function landOnSharedPost(){
+  if(sharedPostLanded) return; sharedPostLanded=true;
+  let pid="";
+  try{ pid=new URLSearchParams(window.location.search).get("post")||""; }catch(e){}
+  if(!pid) return;
+  try{
+    const p=new URLSearchParams(window.location.search); p.delete("post");
+    const qs=p.toString();
+    history.replaceState(null, "", window.location.pathname + (qs ? "?"+qs : "") + window.location.hash);
+  }catch(e){}
+  let v=VIDEOS.find(x=>x.id===pid);
+  if(!v){
+    try{
+      const { data: row } = await sb.from("reelio_posts").select("*").eq("id", pid).maybeSingle();
+      if(row){
+        await ensureProfiles([row.user_id]);
+        await loadAudioFor([row]);
+        const [{ data: likes }, { data: comments }] = await Promise.all([
+          sb.from("reelio_likes").select("post_id").eq("post_id", pid),
+          sb.from("reelio_comments").select("post_id").eq("post_id", pid)
+        ]);
+        v=postVM(row, (likes||[]).length, (comments||[]).length);
+        VIDEOS.unshift(v);
+        state.myPosts=VIDEOS.filter(x=>x.mine);
+        rebuildTagCounts();
+      }
+    }catch(e){}
+  }
+  if(!v){ toast("That post isn't available anymore"); return; }
+  if(state.feedTab!=="foryou"){
+    state.feedTab="foryou";
+    $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou"));
+  }
+  renderFeed(); renderThumbs(VIDEOS);
+  requestAnimationFrame(()=>{
+    const el=$$("#feed .reel").find(r=>r.dataset.id===pid);
+    if(el) el.scrollIntoView({ block:"start" });
+  });
 }
 async function loadFollows(){
   const [{ data: mine }, { data: myLikes }] = await Promise.all([
@@ -1642,14 +1689,19 @@ function bindFeedEvents(){
 }
 /* Share opens the device share sheet (navigator.share — the iOS/Android
    native sheet). Where that's unavailable it falls back to copying the
-   link. Cancelling the sheet doesn't count as a share. */
+   link. Cancelling the sheet doesn't count as a share.
+   The link is a deep link to this exact post (?post=<id> — landOnSharedPost
+   below opens it), and the payload carries the URL only, no separate
+   caption text: with a text field present, the share sheet's Copy action
+   put the caption on the clipboard instead of the link, so pasting it
+   into a browser just ran a search for the caption. */
+function postLink(id){ return "https://reelio-official.pages.dev/?post=" + encodeURIComponent(id); }
 async function sharePost(id, btn){
   const v=VIDEOS.find(x=>x.id===id); if(!v) return;
-  const url="https://reelio-official.pages.dev/";
-  const text=(v.caption || "").trim() || "Watch this on Reelio";
+  const url=postLink(id);
   let shared=false;
   if(navigator.share){
-    try{ await navigator.share({ title:"Reelio", text, url }); shared=true; }
+    try{ await navigator.share({ title:"Reelio", url }); shared=true; }
     catch(e){ if(e && e.name==="AbortError") return; }
   }
   if(!shared){
@@ -3169,7 +3221,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.5.15";
+const APP_VERSION = "1.5.16";
 const EDGE_FIX_KEY = "reelio-edgefix-154";
 const UPDATE_ATTEMPT_KEY = "reelio-update-attempt"; // sessionStorage only: {v, tries} for the update the user just tapped
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
