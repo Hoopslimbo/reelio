@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.4.6" />
+<meta name="app-version" content="1.5.0" />
 <title>Reelio</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -30,12 +30,25 @@
     --font-display:"Avenir Next","Segoe UI",system-ui,sans-serif;
   }
   @media (prefers-color-scheme: light){
-    :root{
+    :root:not([data-theme="dark"]){
       --bg:#f4f4f2; --bg-2:#ffffff; --bg-3:#ececea; --panel:#ffffff;
       --line:rgba(10,20,18,.12); --line-soft:rgba(10,20,18,.07);
       --text:#131517; --text-2:#5b6066; --text-3:#8b9096;
       --bubble-me:#0e7a6c; --bubble-them:#e9e9e6;
     }
+  }
+  /* Manual theme (Settings picker) beats the system scheme. */
+  :root[data-theme="light"]{
+    --bg:#f4f4f2; --bg-2:#ffffff; --bg-3:#ececea; --panel:#ffffff;
+    --line:rgba(10,20,18,.12); --line-soft:rgba(10,20,18,.07);
+    --text:#131517; --text-2:#5b6066; --text-3:#8b9096;
+    --bubble-me:#0e7a6c; --bubble-them:#e9e9e6;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0a0b; --bg-2:#121214; --bg-3:#1b1b1e; --panel:#141416;
+    --line:rgba(255,255,255,.09); --line-soft:rgba(255,255,255,.06);
+    --text:#f5f5f4; --text-2:#a7a7ab; --text-3:#6d6d72;
+    --bubble-me:#0e5f56; --bubble-them:#232326;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{height:100%; width:100%; max-width:100%; overflow-x:hidden; overscroll-behavior:none;}
@@ -101,6 +114,23 @@
     html,body{background:#000;}
     .main{background:transparent;}
   }
+  html[data-theme="dark"], html[data-theme="dark"] body{background:#000;}
+  html[data-theme="dark"] .main{background:transparent;}
+  html[data-theme="light"], html[data-theme="light"] body{background:var(--bg);}
+  html[data-theme="light"] .main{background:var(--bg);}
+  html[data-theme="light"] .bottom-nav{background:rgba(255,255,255,.94); border-top-color:rgba(0,0,0,.08);}
+  html[data-theme="dark"] .bottom-nav{background:rgba(8,8,9,.92); border-top-color:rgba(255,255,255,.08);}
+  html[data-theme="light"] .msg-row.me .bubble{color:#fff;}
+  html[data-theme="dark"] .wp-teal{background:linear-gradient(160deg, #06231f, #0a3a33 55%, #06231f);}
+  html[data-theme="dark"] .wp-sunset{background:linear-gradient(165deg, #2b1530, #57253a 55%, #8a3b2e);}
+  html[data-theme="dark"] .wp-grid{background-color:#101216; background-image:linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size:26px 26px;}
+  html[data-theme="dark"] .wp-dots{background-color:#141210; background-image:radial-gradient(rgba(255,210,140,.16) 1.6px, transparent 1.7px); background-size:22px 22px;}
+  html[data-theme="dark"] .wp-ocean{background:linear-gradient(170deg, #071c30, #0a3552 60%, #0b5563);}
+  html[data-theme="light"] .wp-teal{background:linear-gradient(160deg, #d9f5ef, #b7e9de);}
+  html[data-theme="light"] .wp-sunset{background:linear-gradient(165deg, #f7e3ec, #f3cdb4);}
+  html[data-theme="light"] .wp-grid{background-color:#eef0ee; background-image:linear-gradient(rgba(10,20,18,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(10,20,18,.06) 1px, transparent 1px); background-size:26px 26px;}
+  html[data-theme="light"] .wp-dots{background-color:#f6f1e7; background-image:radial-gradient(rgba(180,120,40,.22) 1.6px, transparent 1.7px); background-size:22px 22px;}
+  html[data-theme="light"] .wp-ocean{background:linear-gradient(170deg, #d8ecf7, #b5dde8);}
   .view{display:none; height:100%; max-width:100%; overflow-x:hidden;}
   .view.active{display:flex; flex-direction:column;}
 
@@ -117,7 +147,10 @@
   .reel-card{position:relative; height:100%; max-height:100%; aspect-ratio:9/16; max-width:min(430px, 94vw); border-radius:18px; overflow:hidden; background:#111; box-shadow:0 24px 70px rgba(0,0,0,.55); flex:none;}
   @media (max-width:760px){
     .reel{padding:0; width:100%; max-width:100%; overflow:hidden;}
-    .reel-card{max-width:100%; width:100%; border-radius:0; box-shadow:none;}
+    .reel-card{max-width:100%; width:100%; height:100%; max-height:none; aspect-ratio:auto; border-radius:0; box-shadow:none;}
+    .reel-meta{bottom:calc(86px + env(safe-area-inset-bottom));}
+    .reel-rail{bottom:calc(112px + env(safe-area-inset-bottom));}
+    .reel-progress{bottom:calc(66px + env(safe-area-inset-bottom));}
     .view{padding-bottom:calc(64px + env(safe-area-inset-bottom));}
     #view-feed{padding-bottom:0;}
   }
@@ -126,7 +159,7 @@
   @keyframes kenburns{from{transform:scale(1) translateY(0);} to{transform:scale(1.09) translateY(-1.5%);}}
   @media (prefers-reduced-motion: reduce){ .reel-card.playing img.poster{animation:none;} }
   .reel-shade{position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.18) 34%, rgba(0,0,0,0) 55%, rgba(0,0,0,.28) 100%); pointer-events:none;}
-  .reel-meta{position:absolute; left:14px; right:78px; bottom:16px; color:#fff; z-index:5;}
+  .reel-meta{position:absolute; left:14px; right:78px; bottom:20px; color:#fff; z-index:5;}
   .reel-author{display:flex; align-items:center; gap:9px; font-weight:800; font-size:16.5px; text-shadow:0 1px 6px rgba(0,0,0,.55);}
   .follow-chip{font-size:12.5px; font-weight:700; border:1.5px solid var(--teal-bright); color:var(--teal-bright); border-radius:7px; padding:3px 9px; background:rgba(0,0,0,.25);}
   .follow-chip.following{border-color:rgba(255,255,255,.5); color:#fff;}
@@ -134,7 +167,7 @@
   .reel-cap .htag{color:var(--teal-bright); font-weight:700;}
   .reel-tags{margin-top:6px; font-size:13.5px; font-weight:700; color:#dffcf6; text-shadow:0 1px 6px rgba(0,0,0,.6);}
   .reel-tags span{margin-right:9px;}
-  .reel-rail{position:absolute; right:10px; bottom:14px; z-index:6; display:flex; flex-direction:column; align-items:center; gap:15px;}
+  .reel-rail{position:absolute; right:10px; bottom:96px; z-index:6; display:flex; flex-direction:column; align-items:center; gap:15px;}
   .rail-btn{display:flex; flex-direction:column; align-items:center; gap:3px; color:#fff; font-size:12px; font-weight:700; text-shadow:0 1px 5px rgba(0,0,0,.5);}
   .rail-btn .ic{width:47px; height:47px; border-radius:50%; background:rgba(18,18,20,.42); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; transition:transform .12s, background .15s;}
   .rail-btn:active .ic{transform:scale(.9);}
@@ -491,6 +524,93 @@
   .update-status.show{display:block;}
   .update-status.ok{color:var(--teal);}
   .version-line{font-size:12px; color:var(--text-3); padding:10px 2px 0;}
+
+  /* ---------- Sound controls on reels ---------- */
+  .mute-btn{position:absolute; top:calc(94px + env(safe-area-inset-top)); right:12px; z-index:8; width:38px; height:38px; border-radius:50%; background:rgba(18,18,20,.45); backdrop-filter:blur(6px); color:#fff; display:flex; align-items:center; justify-content:center;}
+  .mute-btn svg{width:20px; height:20px;}
+  .mute-btn:active{transform:scale(.92);}
+  .tap-sound{display:none; position:absolute; top:calc(94px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:8; align-items:center; gap:7px; background:rgba(10,10,12,.72); backdrop-filter:blur(6px); color:#fff; font-size:13px; font-weight:700; border-radius:999px; padding:8px 14px 8px 11px; border:1px solid rgba(255,255,255,.25);}
+  .tap-sound svg{width:16px; height:16px;}
+  .reel-card.wants-sound .tap-sound{display:flex;}
+  .reel-card.wants-sound .mute-btn{display:none;}
+
+  /* ---------- Audio on reels ---------- */
+  .reel-audio{display:flex; align-items:center; gap:7px; margin-top:8px; color:#fff; font-size:13.5px; font-weight:600; padding:2px 0; max-width:100%; text-align:left; text-shadow:0 1px 6px rgba(0,0,0,.6);}
+  .reel-audio .disc{width:16px; height:16px; flex:none; display:flex;}
+  .reel-audio .disc svg{width:16px; height:16px;}
+  .reel-card.playing .reel-audio .disc svg{animation:discspin 3.4s linear infinite;}
+  @keyframes discspin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){ .reel-card.playing .reel-audio .disc svg{animation:none;} }
+  .reel-audio .ra-title{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px;}
+  .reel-audio .ra-by{color:rgba(255,255,255,.75); flex:none;}
+  .audio-head{display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; padding:8px 0 10px;}
+  .audio-disc{width:64px; height:64px; border-radius:50%; background:var(--bg-3); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--teal); margin-bottom:8px;}
+  .audio-disc svg{width:32px; height:32px; animation:discspin 4s linear infinite;}
+  @media (prefers-reduced-motion: reduce){ .audio-disc svg{animation:none;} }
+  .audio-head b{font-size:18px; line-height:1.3;}
+  .audio-head span{font-size:13.5px; color:var(--text-2);}
+  .audio-post-row{display:flex; gap:11px; align-items:center; width:100%; text-align:left; padding:7px 0;}
+  .audio-post-row .apr-thumb{width:46px; height:60px; border-radius:8px; overflow:hidden; background:#111; flex:none;}
+  .audio-post-row .apr-thumb img, .audio-post-row .apr-thumb video{width:100%; height:100%; object-fit:cover;}
+  .audio-post-row .apr-main{flex:1; min-width:0;}
+  .audio-post-row .apr-main b{display:block; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .audio-post-row .apr-main span{font-size:12.5px; color:var(--text-2);}
+  .audio-chip{display:flex; align-items:center; gap:9px; background:var(--bg-3); border:1px solid var(--line-soft); border-radius:11px; padding:10px 12px; font-size:14px;}
+  .audio-chip svg{width:18px; height:18px; color:var(--teal); flex:none;}
+  .audio-chip b{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700;}
+  .audio-chip button{color:var(--text-3); font-size:16px; padding:2px 6px; flex:none;}
+
+  /* ---------- Hashtag suggestions ---------- */
+  .tag-suggest{display:none; margin-top:8px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--bg-2);}
+  .tag-suggest.show{display:block;}
+  .tag-opt{display:flex; width:100%; align-items:center; justify-content:space-between; gap:10px; padding:11px 13px; font-size:14.5px; text-align:left; color:var(--text);}
+  .tag-opt:hover, .tag-opt:active{background:var(--bg-3);}
+  .tag-opt b{color:var(--teal); font-weight:700;}
+  .tag-opt span{font-size:12.5px; color:var(--text-3); flex:none;}
+
+  /* ---------- Comments: threads, pin, heart, moderation ---------- */
+  .avatar.xs{width:16px; height:16px; font-size:8px;}
+  .comment{position:relative;}
+  .c-ava-btn{padding:0; border-radius:50%; flex:none; line-height:0;}
+  .c-name-btn{padding:0; font-size:13.5px; color:var(--text); text-align:left;}
+  .c-top{display:flex; align-items:center; gap:7px; flex-wrap:wrap;}
+  .creator-hearted{display:inline-flex; align-items:center; gap:3px;}
+  .creator-hearted svg{width:12px; height:12px; fill:var(--heart); stroke:var(--heart);}
+  .pinned-tag{display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:700; color:var(--teal); margin-top:2px;}
+  .pinned-tag svg{width:11px; height:11px;}
+  .c-actions{display:flex; align-items:center; gap:15px; margin-top:4px;}
+  .c-act{font-size:12.5px; font-weight:700; color:var(--text-3); padding:3px 0; display:inline-flex; align-items:center; gap:5px;}
+  .c-act svg{width:14px; height:14px;}
+  .c-act.on{color:var(--heart);}
+  .c-act.pin-on{color:var(--teal);}
+  .c-dots{margin-left:auto; align-self:flex-start; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-3); flex:none;}
+  .c-dots:hover{background:var(--bg-3); color:var(--text);}
+  .c-dots svg{width:17px; height:17px;}
+  .c-kids{margin-left:32px;}
+  .c-kids .c-kids{margin-left:20px;}
+  .c-kids .c-kids .c-kids{margin-left:12px;}
+  .c-kids .c-kids .c-kids .c-kids{margin-left:8px;}
+  .c-edit-slot textarea{width:100%; background:var(--bg-3); border:1px solid var(--teal); border-radius:10px; padding:9px 11px; font-size:14.5px; outline:none; resize:none; margin-top:6px;}
+  .c-edit-btns{display:flex; gap:8px; margin-top:7px;}
+  .c-edit-btns .btn{padding:7px 15px; font-size:13px;}
+  .reason-opt{display:flex; width:100%; text-align:left; padding:12px 13px; border:1px solid var(--line); border-radius:11px; margin-bottom:8px; font-size:14.5px; font-weight:600; align-items:center; gap:11px; color:var(--text); background:var(--bg-2);}
+  .reason-opt .radio{width:19px; height:19px; border-radius:50%; border:2px solid var(--text-3); flex:none; position:relative;}
+  .reason-opt.on{border-color:var(--teal);}
+  .reason-opt.on .radio{border-color:var(--teal);}
+  .reason-opt.on .radio::after{content:""; position:absolute; inset:3.5px; border-radius:50%; background:var(--teal);}
+  #reportSubmit[disabled]{opacity:.5; pointer-events:none;}
+
+  /* ---------- Theme picker ---------- */
+  .theme-picker{display:flex; background:var(--bg-3); border-radius:11px; padding:4px; gap:4px; margin:2px 0 8px;}
+  .theme-opt{flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:10px; border-radius:8px; font-size:14.5px; font-weight:700; color:var(--text-2);}
+  .theme-opt svg{width:17px; height:17px;}
+  .theme-opt.on{background:var(--bg-2); color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,.18);}
+
+  /* ---------- User profile sheet ---------- */
+  .user-head{display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; padding:6px 0 2px;}
+  .user-head h3{margin:8px 0 0; font-size:19px; font-family:var(--font-display);}
+  .user-head .u-handle{color:var(--text-2); font-size:13.5px;}
+  .user-head .u-bio{font-size:14px; line-height:1.5; margin:8px 0 0; max-width:44ch;}
 </style>
 </head>
 <body>
@@ -518,7 +638,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.4.6</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.5.0</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -670,6 +790,7 @@
   <div class="sheet-body">
     <div class="comment-list" id="commentList"></div>
   </div>
+  <div class="edit-banner" id="replyBanner"><b>Replying</b><span id="replyBannerText"></span><button class="icon-btn" id="replyCancel" aria-label="Cancel reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <form class="composer" id="commentForm" style="border-top:1px solid var(--line-soft);">
     <span id="commentAvatar"></span>
     <div class="box"><textarea id="commentInput" rows="1" placeholder="Add a comment…"></textarea></div>
@@ -723,7 +844,20 @@
     <div class="field">
       <label for="uploadCaption">Caption</label>
       <textarea id="uploadCaption" rows="2" placeholder="What's happening in this one?"></textarea>
-      <p class="hint">Drop #hashtags right in your caption — like #skate or #cooking. People who watch and like posts with those tags will see yours more.</p>
+      <div class="tag-suggest" id="tagSuggest"></div>
+      <p class="hint">Drop #hashtags right in your caption — like #skate or #cooking. As you type one, tags other people have used pop up with their post counts — tap one to drop it in. People who watch and like posts with those tags will see yours more.</p>
+    </div>
+    <div class="field" id="audioField" style="display:none;">
+      <label>Audio</label>
+      <div class="audio-chip" id="audioChip" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.6"/></svg>
+        <b id="audioChipTitle"></b>
+        <button type="button" id="audioChipRemove" aria-label="Remove audio">✕</button>
+      </div>
+      <div id="audioNameWrap">
+        <input type="text" id="audioName" placeholder="Name this sound (optional)" maxlength="60" />
+        <p class="hint">Your video's own sound becomes an audio on Reelio that anyone can reuse in their videos. Name it, or leave it blank and it'll post as your original audio.</p>
+      </div>
     </div>
   </div>
   <div class="sheet-actions">
@@ -838,7 +972,14 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.4.6</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.0</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+    </div>
+    <div class="setting-row" style="display:block;">
+      <div class="sr-main" style="margin-bottom:9px;"><b>Appearance</b><span>Dark is Reelio's classic look. Light flips the whole app — feed, chats, sheets, everything.</span></div>
+      <div class="theme-picker" role="group" aria-label="Appearance">
+        <button class="theme-opt" id="themeDark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a7 7 0 0 0 9.5 9.5z"/></svg>Dark</button>
+        <button class="theme-opt" id="themeLight"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5 5l1.6 1.6M17.4 17.4 19 19M19 5l-1.6 1.6M6.6 17.4 5 19"/></svg>Light</button>
+      </div>
     </div>
     <div class="setting-row">
       <div class="sr-main"><b>Check for Updates</b><span>Reelio never updates on its own — nothing installs in the background. Tap Check to look for a new version and install it right away.</span></div>
@@ -849,6 +990,74 @@
       <div class="sr-main"><b>Account</b><span id="settingsAccount">Signed in</span></div>
       <button class="btn btn-ghost" id="settingsSignOutBtn">Sign out</button>
     </div>
+  </div>
+</section>
+
+<!-- ============ AUDIO SHEET ============ -->
+<section class="sheet" id="audioSheet" aria-label="Audio">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><h2>Audio</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="sheet-body">
+    <div class="audio-head">
+      <span class="audio-disc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.6"/></svg></span>
+      <b id="audioTitle"></b>
+      <span id="audioBy"></span>
+      <span id="audioUses"></span>
+    </div>
+    <audio id="audioPreview" controls style="width:100%; margin:2px 0 6px;"></audio>
+    <div class="field">
+      <label>Posts using this audio</label>
+      <div id="audioPosts"></div>
+    </div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn btn-ghost" data-close>Close</button>
+    <button class="btn btn-teal" id="useAudioBtn">Use this audio</button>
+  </div>
+</section>
+
+<!-- ============ REPORT COMMENT SHEET ============ -->
+<section class="sheet" id="reportSheet" aria-label="Report comment">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><h2>Report comment</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="sheet-body">
+    <p class="hint">Why are you reporting this comment? Reelio runs a quick automatic check on the words in it the moment you send — if it clearly breaks the rules it's hidden from the comments right away. Either way, your report goes in for review.</p>
+    <div id="reportReasons">
+      <button type="button" class="reason-opt" data-reason="spam"><span class="radio"></span>Spam</button>
+      <button type="button" class="reason-opt" data-reason="harassment"><span class="radio"></span>Harassment</button>
+      <button type="button" class="reason-opt" data-reason="hate_speech"><span class="radio"></span>Hate speech</button>
+      <button type="button" class="reason-opt" data-reason="sexual_content"><span class="radio"></span>Sexual content</button>
+      <button type="button" class="reason-opt" data-reason="other"><span class="radio"></span>Other</button>
+    </div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn btn-ghost" data-close>Cancel</button>
+    <button class="btn btn-teal" id="reportSubmit" disabled>Report</button>
+  </div>
+</section>
+
+<!-- ============ USER PROFILE SHEET ============ -->
+<section class="sheet" id="userSheet" aria-label="Profile">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><h2>Profile</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="sheet-body">
+    <div class="user-head">
+      <span id="userAvatar"></span>
+      <h3 id="userName"></h3>
+      <span class="u-handle" id="userHandle"></span>
+      <p class="u-bio" id="userBio"></p>
+    </div>
+    <div class="profile-stats" style="justify-content:center; margin:14px 0 2px;">
+      <div class="pstat" style="text-align:center;"><b id="userStatPosts">0</b><span>Posts</span></div>
+      <div class="pstat" style="text-align:center;"><b id="userStatFollowers">0</b><span>Followers</span></div>
+      <div class="pstat" style="text-align:center;"><b id="userStatFollowing">0</b><span>Following</span></div>
+    </div>
+    <div class="profile-actions" style="justify-content:center; margin-top:12px;">
+      <button class="btn btn-teal" id="userFollowBtn">Follow</button>
+      <button class="btn btn-ghost" id="userMsgBtn">Message</button>
+    </div>
+    <div class="thumb-grid" id="userPosts" style="margin-top:16px;"></div>
+    <p class="empty-note" id="userPostsEmpty" style="display:none;">No posts yet.</p>
   </div>
 </section>
 
@@ -1047,6 +1256,33 @@ const heartSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const commentSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg>';
 const shareSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5.5 20 12l-7 6.5v-4C7 14.5 4.5 16.5 3 19c0-6 3.5-9.5 10-10z"/><path d="M13 5.5V9"/></svg>';
 const bookmarkSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12V21l-6-4-6 4z"/></svg>';
+const speakerOnSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H3v6h3.5L11 19z" fill="currentColor" stroke="none"/><path d="M15.5 8.7a4.6 4.6 0 0 1 0 6.6"/><path d="M18.3 6a8.8 8.8 0 0 1 0 12"/></svg>';
+const speakerOffSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H3v6h3.5L11 19z" fill="currentColor" stroke="none"/><path d="m16 9.8 5 5M21 9.8l-5 5"/></svg>';
+const discSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.6"/></svg>';
+const pinSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l-1 7 3 3v2H7v-2l3-3z"/><path d="M12 16v5"/></svg>';
+const dotsSVG = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>';
+const heartMiniSVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.7C6 16.6 3 13.2 3 9.6 3 7 5 5 7.4 5c1.7 0 3.4 1 4.6 2.7C13.2 6 14.9 5 16.6 5 19 5 21 7 21 9.6c0 3.6-3 7-9 11.1z"/></svg>';
+
+/* Sound: videos try to play WITH sound. Browsers block unmuted autoplay
+   until the first tap, so a rejected play() falls back to muted and the
+   card shows a "Tap for sound" pill; the speaker button toggles sound
+   globally for the session. */
+let soundOn = true;
+function applyCardSound(card){
+  const vid=card.querySelector("video"), track=card.querySelector("audio[data-track]");
+  if(track){ if(vid) vid.muted=true; track.muted=!soundOn; }
+  else if(vid){ vid.muted=!soundOn; }
+}
+function setSound(on){
+  soundOn=on;
+  $$("#feed .reel-card").forEach(card=>{
+    if(on) card.classList.remove("wants-sound");
+    applyCardSound(card);
+    const vid=card.querySelector("video");
+    if(on && card.classList.contains("playing") && vid && vid.paused) vid.play().catch(()=>{});
+  });
+  $$("#feed [data-mute]").forEach(b=>{ b.innerHTML = soundOn ? speakerOnSVG : speakerOffSVG; });
+}
 
 /* Hashtags live in the caption: "#skate" anywhere in the text is a tag.
    tagAffinity learns, per user, which tags they engage with — seeded from
@@ -1085,14 +1321,45 @@ function postVM(row, likeCount, commentCount){
     videoUrl: row.media_type === "video" ? row.media_url : null,
     img: row.media_type === "photo" ? row.media_url : "",
     caption: row.caption || "", tags: [...tagSet].map(t => "#" + t),
+    audioId: row.audio_id || null,
     likes: likeCount || 0, commentCount: commentCount || 0,
     comments: null, commentsLoaded: false, shares: 0, created_at: row.created_at
   };
 }
+/* ================= AUDIO TRACKS ================= */
+/* reelio_audio rows: a named, reusable sound. A video post either reuses
+   someone else's audio (audio_id set, use_count bumped) or mints its own
+   from its own sound. When the audio comes from a different file than the
+   video, the video plays muted and the audio file plays alongside it. */
+const AUDIOS = new Map();            // audioId -> {id, userId, title, url, useCount}
+function audioVM(row){
+  return { id:row.id, userId:row.user_id, title:row.title || "Original audio",
+    url:row.audio_url || "", useCount:row.use_count || 0 };
+}
+async function loadAudioFor(rows){
+  const ids=[...new Set((rows||[]).map(r=>r.audio_id).filter(Boolean))].filter(id=>!AUDIOS.has(id));
+  if(!ids.length) return;
+  const { data } = await sb.from("reelio_audio").select("*").in("id", ids);
+  (data||[]).forEach(a=>AUDIOS.set(a.id, audioVM(a)));
+  await ensureProfiles((data||[]).map(a=>a.user_id));
+}
+
+/* Hashtag usage across the loaded posts — powers the caption suggestions. */
+let TAG_COUNTS = {};
+function rebuildTagCounts(){
+  TAG_COUNTS = {};
+  VIDEOS.forEach(v=>{
+    const seen=new Set();
+    v.tags.forEach(t=>{ const k=normTag(t); if(k) seen.add(k); });
+    seen.forEach(k=>{ TAG_COUNTS[k]=(TAG_COUNTS[k]||0)+1; });
+  });
+}
+
 async function loadPosts(){
   const { data: rows, error } = await sb.from("reelio_posts").select("*").order("created_at", { ascending:false }).limit(100);
   if(error){ toast("Couldn't load posts"); return; }
   await ensureProfiles(rows.map(r=>r.user_id));
+  await loadAudioFor(rows);
   const ids = rows.map(r=>r.id);
   const likeCounts = {}, commentCounts = {};
   if(ids.length){
@@ -1106,6 +1373,7 @@ async function loadPosts(){
   VIDEOS = rows.map(r=>postVM(r, likeCounts[r.id], commentCounts[r.id]));
   state.myPosts = VIDEOS.filter(v=>v.mine);
   seedAffinityFromLikes();
+  rebuildTagCounts();
   renderFeed(); renderThumbs(VIDEOS);
 }
 async function loadFollows(){
@@ -1164,10 +1432,15 @@ function renderFeed(){
     const isPhoto = v.type==="photo";
     const capTags = new Set(parseHashtags(v.caption));
     const extraTags = v.tags.filter(t=>!capTags.has(normTag(t)));
+    const audio = v.audioId ? AUDIOS.get(v.audioId) : null;
+    const audioCreator = audio ? profOf(audio.userId) : null;
+    const useTrack = !!(audio && audio.url && v.videoUrl && audio.url !== v.videoUrl);
     reel.innerHTML=`
       <div class="reel-card" data-card="${v.id}">
-        ${v.videoUrl ? `<video src="${v.videoUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loop muted playsinline></video>`
+        ${v.videoUrl ? `<video src="${v.videoUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" loop playsinline preload="auto"></video>`
                       : `<img class="poster" src="${v.img}" alt="Photo by ${esc(v.author)}" />`}
+        ${useTrack ? `<audio data-track src="${audio.url}" loop preload="auto" style="display:none;"></audio>` : ""}
+        ${v.videoUrl ? `<button class="mute-btn" data-mute aria-label="Toggle sound">${soundOn ? speakerOnSVG : speakerOffSVG}</button><button class="tap-sound" data-tapsound>${speakerOffSVG}<span>Tap for sound</span></button>` : ""}
         <div class="reel-shade"></div>
         ${isPhoto ? "" : `<div class="paused-badge"><span><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg></span></div>`}
         <div class="big-heart"><svg viewBox="0 0 24 24"><path d="M12 20.7C6 16.6 3 13.2 3 9.6 3 7 5 5 7.4 5c1.7 0 3.4 1 4.6 2.7C13.2 6 14.9 5 16.6 5 19 5 21 7 21 9.6c0 3.6-3 7-9 11.1z"/></svg></div>
@@ -1175,6 +1448,7 @@ function renderFeed(){
           <div class="reel-author"><span>${esc(v.handle)}</span>${v.mine?"":`<button class="follow-chip ${following?"following":""}" data-follow="${v.userId}">${following?"Following":"Follow"}</button>`}</div>
           <p class="reel-cap"></p>
           ${extraTags.length ? `<div class="reel-tags">${extraTags.map(t=>`<span>${esc(t)}</span>`).join("")}</div>` : ""}
+          ${audio ? `<button class="reel-audio" data-audio="${audio.id}"><span class="disc">${discSVG}</span><span class="ra-title">${esc(audio.title)}</span><span class="ra-by">· @${esc(audioCreator ? audioCreator.username : "")}</span></button>` : ""}
         </div>
         <div class="reel-rail">
           <div class="rail-avatar">${avatarHTML(v,"md")}${v.mine?"":`<span class="plus ${following?"done":""}" data-follow="${v.userId}">${following?"✓":"+"}</span>`}</div>
@@ -1196,6 +1470,9 @@ function bindFeedEvents(){
   $$("#feed [data-comments]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); openComments(b.dataset.comments); }));
   $$("#feed [data-share]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); toast("Link copied — send it to whoever needs to see this"); }));
   $$("#feed [data-follow]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); toggleFollow(b.dataset.follow); }));
+  $$("#feed [data-mute]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); setSound(!soundOn); }));
+  $$("#feed [data-tapsound]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); setSound(true); }));
+  $$("#feed [data-audio]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); openAudioSheet(b.dataset.audio); }));
   $$("#feed .reel-card").forEach(card=>{
     let lastTap=0;
     card.addEventListener("click", e=>{
@@ -1208,8 +1485,12 @@ function bindFeedEvents(){
 }
 function togglePlay(card){
   const vid=card.querySelector("video");
+  const track=card.querySelector("audio[data-track]");
   const playing=card.classList.toggle("playing");
-  if(vid){ playing ? vid.play().catch(()=>{}) : vid.pause(); }
+  if(vid){
+    if(playing){ applyCardSound(card); vid.play().catch(()=>{}); if(track) track.play().catch(()=>{}); }
+    else { vid.pause(); if(track) track.pause(); }
+  }
 }
 function likeWithHeart(id, card, e){
   if(!state.liked.has(id)){ toggleLike(id); }
@@ -1271,8 +1552,17 @@ function observeReels(){
     entries.forEach(en=>{
       const card=en.target.querySelector(".reel-card"); if(!card) return;
       const vid=card.querySelector("video");
-      if(en.intersectionRatio>=0.65){ card.classList.add("playing"); card._watchSince=Date.now(); if(vid) vid.play().catch(()=>{}); }
-      else { card.classList.remove("playing"); creditWatch(card, card.dataset.card); if(vid) vid.pause(); }
+      const track=card.querySelector("audio[data-track]");
+      if(en.intersectionRatio>=0.65){
+        card.classList.add("playing"); card._watchSince=Date.now();
+        applyCardSound(card);
+        if(vid){
+          const p=vid.play();
+          if(p) p.catch(()=>{ if(!vid.muted){ vid.muted=true; card.classList.add("wants-sound"); vid.play().catch(()=>{}); } });
+        }
+        if(track) track.play().catch(()=>{});
+      }
+      else { card.classList.remove("playing"); creditWatch(card, card.dataset.card); if(vid) vid.pause(); if(track) track.pause(); }
     });
   }, { root:$("#feed"), threshold:[0.65] });
   $$("#feed .reel").forEach(r=>reelObserver.observe(r));
@@ -1301,21 +1591,38 @@ function openSheet(id){
   $$(".sheet").forEach(s=>s.classList.remove("show"));
   $("#"+id).classList.add("show");
 }
-function closeSheets(){ $("#scrim").classList.remove("show"); $$(".sheet").forEach(s=>s.classList.remove("show")); hidePopups(); }
+function closeSheets(){ $("#scrim").classList.remove("show"); $$(".sheet").forEach(s=>s.classList.remove("show")); hidePopups(); const ap=$("#audioPreview"); if(ap){ try{ ap.pause(); }catch(e){} } }
 $("#scrim").addEventListener("click", closeSheets);
 $$("[data-close]").forEach(b=>b.addEventListener("click", closeSheets));
 document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeSheets(); hidePopups(); } });
 
 /* ================= COMMENTS ================= */
+/* Threaded like YouTube: every comment can be replied to, and replies can
+   be replied to, nesting as deep as the conversation goes. The post's
+   creator can pin top-level comments to the top and heart any comment —
+   a hearted comment shows the creator's avatar with a heart next to the
+   commenter's name. Your own comments get a 3-dot menu (edit / delete);
+   long-pressing someone else's comment opens the report flow. */
+function commentVM(row){
+  return { id:row.id, who:row.user_id, text:row.content || "", time:relTime(row.created_at),
+    parentId:row.parent_id || null,
+    pinned:!!(row.pinned || row.is_pinned),
+    hearted:!!(row.creator_heart || row.heart_by_creator || row.creator_hearted) };
+}
+const hiddenComments = new Set();    // comments hidden by the report check, this session
+const REPORT_QUEUE = [];             // every report filed this session
+let replyTo = null;                  // {id, username} the composer is answering
+
 async function openComments(id){
   state.commentVideoId=id;
+  clearReplyTo();
   const v=VIDEOS.find(x=>x.id===id); if(!v) return;
   $("#commentsTitle").textContent="Comments";
   $("#commentList").innerHTML='<p class="empty-note" style="text-align:center; padding:18px 0;">Loading…</p>';
   openSheet("commentsSheet");
   const { data } = await sb.from("reelio_comments").select("*").eq("post_id", id).order("created_at", { ascending:true });
   await ensureProfiles((data||[]).map(c=>c.user_id));
-  v.comments=(data||[]).map(c=>({ id:c.id, who:c.user_id, text:c.content, time:relTime(c.created_at) }));
+  v.comments=(data||[]).map(commentVM);
   v.commentsLoaded=true;
   $("#commentsTitle").textContent= v.comments.length ? `Comments · ${fmt(v.comments.length)}` : "Comments";
   renderComments();
@@ -1328,25 +1635,270 @@ function renderComments(){
     list.innerHTML='<p class="empty-note" style="text-align:center; padding:18px 0;">No comments yet — be the first to say something.</p>';
     return;
   }
-  v.comments.forEach(c=>{
-    const p=personShape(profOf(c.who));
-    const row=document.createElement("div"); row.className="comment";
-    row.innerHTML=`${avatarHTML(p,"sm")}<div class="c-main"><b>${esc(p.handle)}</b><p></p><span>${c.time} ago</span></div>`;
-    row.querySelector("p").textContent=c.text;
-    list.appendChild(row);
+  const visible=v.comments.filter(c=>!hiddenComments.has(c.id));
+  if(!visible.length){
+    list.innerHTML='<p class="empty-note" style="text-align:center; padding:18px 0;">Nothing to show here.</p>';
+    return;
+  }
+  const byId=new Map(visible.map(c=>[c.id, c]));
+  const kids=new Map();
+  visible.forEach(c=>{
+    const p=(c.parentId && byId.has(c.parentId)) ? c.parentId : null;
+    if(!kids.has(p)) kids.set(p, []);
+    kids.get(p).push(c);
+  });
+  const roots=(kids.get(null)||[]).slice().sort((a,b)=>((b.pinned?1:0)-(a.pinned?1:0)));
+  roots.forEach(c=>list.appendChild(commentEl(c, kids, 0, v)));
+}
+function commentEl(c, kids, depth, v){
+  const wrap=document.createElement("div"); wrap.className="c-wrap";
+  const p=personShape(profOf(c.who));
+  const mine=c.who===ME.id;
+  const postMine=v.mine;
+  const row=document.createElement("div"); row.className="comment"; row.dataset.cid=c.id;
+  row.innerHTML=`
+    <button class="c-ava-btn" data-user aria-label="View ${esc(p.name)}'s profile">${avatarHTML(p,"sm")}</button>
+    <div class="c-main">
+      <div class="c-top"><button class="c-name-btn" data-user><b>${esc(p.handle)}</b></button><span>${c.time} ago</span>${c.hearted?`<span class="creator-hearted" title="Hearted by the creator">${avatarHTML(personShape(profOf(v.userId)),"xs")}${heartMiniSVG}</span>`:""}</div>
+      ${c.pinned?`<div class="pinned-tag">${pinSVG}<span>Pinned by ${v.mine?"you":"the creator"}</span></div>`:""}
+      <p></p>
+      <div class="c-actions">
+        <button class="c-act" data-reply>Reply</button>
+        ${postMine?`<button class="c-act ${c.hearted?"on":""}" data-heart>${heartMiniSVG}${c.hearted?"Hearted":"Heart"}</button>`:""}
+        ${postMine && depth===0?`<button class="c-act ${c.pinned?"pin-on":""}" data-pin>${pinSVG}${c.pinned?"Pinned":"Pin"}</button>`:""}
+      </div>
+      <div class="c-edit-slot"></div>
+    </div>
+    ${mine?`<button class="c-dots" data-dots aria-label="Comment options">${dotsSVG}</button>`:""}`;
+  row.querySelector("p").textContent=c.text;
+  wrap.appendChild(row);
+  const children=kids.get(c.id)||[];
+  if(children.length){
+    const kw=document.createElement("div"); kw.className="c-kids";
+    children.forEach(ch=>kw.appendChild(commentEl(ch, kids, depth+1, v)));
+    wrap.appendChild(kw);
+  }
+  let lpFired=false;
+  row.querySelectorAll("[data-user]").forEach(b=>b.addEventListener("click", ()=>{ if(lpFired){ lpFired=false; return; } openUserProfile(c.who); }));
+  row.querySelector("[data-reply]").addEventListener("click", ()=>setReplyTo(c));
+  const heartBtn=row.querySelector("[data-heart]");
+  if(heartBtn) heartBtn.addEventListener("click", ()=>toggleCommentHeart(c));
+  const pinBtn=row.querySelector("[data-pin]");
+  if(pinBtn) pinBtn.addEventListener("click", ()=>toggleCommentPin(c));
+  const dots=row.querySelector("[data-dots]");
+  if(dots) dots.addEventListener("click", e=>{ e.stopPropagation(); showCommentMenu(c, dots); });
+  if(!mine){
+    let lpTimer=null;
+    row.addEventListener("pointerdown", ()=>{ lpFired=false; clearTimeout(lpTimer); lpTimer=setTimeout(()=>{ lpFired=true; openReport(c); }, 550); });
+    ["pointerup","pointermove","pointercancel","pointerleave"].forEach(ev=>row.addEventListener(ev, ()=>clearTimeout(lpTimer)));
+    row.addEventListener("contextmenu", e=>{ e.preventDefault(); openReport(c); });
+  }
+  return wrap;
+}
+function setReplyTo(c){
+  replyTo={ id:c.id, username:profOf(c.who).username };
+  $("#replyBanner").classList.add("show");
+  $("#replyBannerText").textContent="@"+replyTo.username;
+  $("#commentInput").focus();
+}
+function clearReplyTo(){
+  replyTo=null;
+  const b=$("#replyBanner"); if(b) b.classList.remove("show");
+}
+$("#replyCancel").addEventListener("click", clearReplyTo);
+function syncCommentCount(v){
+  const cc=document.querySelector(`#feed [data-comments="${v.id}"] span:last-child`); if(cc) cc.textContent=fmt(v.commentCount);
+  if(state.commentVideoId===v.id) $("#commentsTitle").textContent= v.commentCount ? `Comments · ${fmt(v.commentCount)}` : "Comments";
+}
+async function toggleCommentPin(c){
+  c.pinned=!c.pinned;
+  try{ await sb.from("reelio_comments").update({ pinned:c.pinned }).eq("id", c.id); }catch(e){}
+  renderComments();
+  toast(c.pinned ? "Pinned to the top of the comments" : "Pin removed");
+}
+async function toggleCommentHeart(c){
+  c.hearted=!c.hearted;
+  try{ await sb.from("reelio_comments").update({ creator_heart:c.hearted }).eq("id", c.id); }catch(e){}
+  renderComments();
+}
+/* --- own-comment menu: edit / delete --- */
+function showCommentMenu(c, anchor){
+  const menu=$("#msgMenu");
+  const pencil='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+  const trash='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13"/></svg>';
+  menu.innerHTML=`<button data-cm="edit">${pencil}Edit comment</button><button data-cm="delete" class="danger">${trash}Delete comment</button>`;
+  const r=anchor.getBoundingClientRect();
+  menu.classList.add("show");
+  menu.style.left=Math.max(8, Math.min(r.left-150, innerWidth-menu.offsetWidth-10))+"px";
+  menu.style.top=Math.min(r.bottom+6, innerHeight-menu.offsetHeight-10)+"px";
+  menu.querySelectorAll("[data-cm]").forEach(b=>b.addEventListener("click", ()=>{
+    const act=b.dataset.cm; hidePopups();
+    if(act==="edit") startCommentEdit(c);
+    if(act==="delete") deleteComment(c);
+  }));
+}
+function startCommentEdit(c){
+  const v=VIDEOS.find(x=>x.id===state.commentVideoId); if(!v) return;
+  const row=document.querySelector(`#commentList .comment[data-cid="${c.id}"]`); if(!row) return;
+  const slot=row.querySelector(".c-edit-slot");
+  slot.innerHTML=`<textarea rows="2"></textarea><div class="c-edit-btns"><button class="btn btn-teal" data-save>Save</button><button class="btn btn-ghost" data-cancel>Cancel</button></div>`;
+  const ta=slot.querySelector("textarea"); ta.value=c.text; ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+  slot.querySelector("[data-cancel]").addEventListener("click", ()=>{ slot.innerHTML=""; });
+  slot.querySelector("[data-save]").addEventListener("click", async ()=>{
+    const text=ta.value.trim(); if(!text) return;
+    const { error } = await sb.from("reelio_comments").update({ content:text }).eq("id", c.id);
+    if(error){ toast("Couldn't save that edit"); return; }
+    c.text=text; renderComments(); toast("Comment updated");
   });
 }
+async function deleteComment(c){
+  const v=VIDEOS.find(x=>x.id===state.commentVideoId); if(!v) return;
+  const { error } = await sb.from("reelio_comments").delete().eq("id", c.id);
+  if(error){ toast("Couldn't delete that comment"); return; }
+  v.comments=v.comments.filter(x=>x.id!==c.id);
+  v.commentCount=Math.max(0, v.commentCount-1);
+  if(replyTo && replyTo.id===c.id) clearReplyTo();
+  renderComments(); syncCommentCount(v);
+  toast("Comment deleted");
+}
+/* --- reporting + on-device toxicity check --- */
+function normalizeTox(t){
+  return " " + (t||"").toLowerCase()
+    .replace(/[0-9@!$]/g, ch=>({ "0":"o", "1":"i", "3":"e", "4":"a", "5":"s", "7":"t", "@":"a", "$":"s", "!":"i" }[ch] || ch))
+    .replace(/[^a-z\s]/g, " ")
+    .replace(/(.)\1{2,}/g, "$1$1")
+    .replace(/\s+/g, " ") + " ";
+}
+const TOX_SEVERE = ["kill yourself","kys","faggot","nigger","nigga","retard","cunt","whore","slut","bitch","pedophile","rapist","molest","porn","fuck","shit","bastard","dickhead","skank","tranny"];
+const TOX_MILD = ["stupid","idiot","dumb","loser","ugly","shut up","hate you","trash","sucks","suck","damn","hell","fatso","weirdo","creep","moron","pathetic"];
+function toxicityScore(text){
+  const n=normalizeTox(text);
+  const tokens=n.trim().split(" ").filter(Boolean);
+  let score=0;
+  TOX_SEVERE.forEach(w=>{
+    if(w.includes(" ")){ if(n.includes(" "+w+" ")) score+=3; }
+    else if(tokens.some(tok=>tok===w || (w.length>=4 && tok.startsWith(w)))) score+=3;
+  });
+  TOX_MILD.forEach(w=>{
+    if(w.includes(" ")){ if(n.includes(" "+w+" ")) score+=1; }
+    else if(tokens.includes(w)) score+=1;
+  });
+  const letters=(text||"").replace(/[^a-zA-Z]/g, "");
+  if(letters.length>10){
+    const caps=letters.replace(/[^A-Z]/g, "").length;
+    if(caps/letters.length>0.8) score+=1;    // ALL-CAPS shouting
+  }
+  return { score, bad: score>=3 };
+}
+let reportTarget=null, reportReason=null;
+function openReport(c){
+  reportTarget=c; reportReason=null;
+  $$("#reportReasons [data-reason]").forEach(b=>b.classList.remove("on"));
+  $("#reportSubmit").disabled=true;
+  openSheet("reportSheet");
+}
+$$("#reportReasons [data-reason]").forEach(b=>b.addEventListener("click", ()=>{
+  reportReason=b.dataset.reason;
+  $$("#reportReasons [data-reason]").forEach(x=>x.classList.toggle("on", x===b));
+  $("#reportSubmit").disabled=false;
+}));
+$("#reportSubmit").addEventListener("click", async ()=>{
+  const c=reportTarget, v=VIDEOS.find(x=>x.id===state.commentVideoId);
+  if(!c || !reportReason) return;
+  const check=toxicityScore(c.text);
+  REPORT_QUEUE.push({ reporter_id:ME.id, comment_id:c.id, post_id:v ? v.id : null,
+    reason:reportReason, toxicity_score:check.score, auto_flagged:check.bad, created_at:new Date().toISOString() });
+  try{
+    await sb.from("reelio_reports").insert({ reporter_id:ME.id, comment_id:c.id, post_id:v ? v.id : null,
+      reason:reportReason, toxicity_score:check.score, auto_flagged:check.bad });
+  }catch(e){ /* table may not exist yet — the report stays queued in REPORT_QUEUE */ }
+  reportTarget=null; reportReason=null;
+  if(check.bad){
+    hiddenComments.add(c.id);
+    openSheet("commentsSheet"); renderComments();
+    toast("That comment clearly breaks the rules — it's hidden and your report is in.");
+  } else {
+    openSheet("commentsSheet"); renderComments();
+    toast("Report sent — thanks, we'll take a look.");
+  }
+});
+/* --- commenter profiles --- */
+let profileUserId=null;
+async function openUserProfile(userId){
+  if(!userId) return;
+  if(userId===ME.id){ closeSheets(); switchView("profile"); return; }
+  profileUserId=userId;
+  await ensureProfiles([userId]);
+  const p=profOf(userId), person=personShape(p);
+  $("#userAvatar").innerHTML=avatarHTML(person, "lg");
+  $("#userName").textContent=person.name;
+  $("#userHandle").textContent=person.handle;
+  const bio=$("#userBio"); bio.textContent=p.bio||""; bio.style.display=p.bio ? "" : "none";
+  updateUserFollowBtn();
+  openSheet("userSheet");
+  const [{ count:postCount }, { count:followers }, { count:following }, { data:posts }] = await Promise.all([
+    sb.from("reelio_posts").select("*", { count:"exact", head:true }).eq("user_id", userId),
+    sb.from("reelio_follows").select("*", { count:"exact", head:true }).eq("following_id", userId),
+    sb.from("reelio_follows").select("*", { count:"exact", head:true }).eq("follower_id", userId),
+    sb.from("reelio_posts").select("*").eq("user_id", userId).order("created_at", { ascending:false }).limit(30)
+  ]);
+  if(profileUserId!==userId) return;
+  $("#userStatPosts").textContent=fmt(postCount||0);
+  $("#userStatFollowers").textContent=fmt(followers||0);
+  $("#userStatFollowing").textContent=fmt(following||0);
+  const grid=$("#userPosts"); grid.innerHTML="";
+  const rows=posts||[];
+  $("#userPostsEmpty").style.display=rows.length ? "none" : "block";
+  rows.forEach(row=>{
+    const b=document.createElement("button"); b.className="thumb";
+    let vm=VIDEOS.find(x=>x.id===row.id);
+    b.innerHTML=`${thumbMedia(vm || postVM(row,0,0), "Post by "+esc(person.name))}<div class="t-meta"><b></b></div>`;
+    b.querySelector("b").textContent=row.caption||"";
+    b.addEventListener("click", ()=>{
+      if(!vm){ vm=postVM(row,0,0); VIDEOS.unshift(vm); }
+      closeSheets(); switchView("feed"); state.feedTab="foryou";
+      $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou"));
+      renderFeed();
+      requestAnimationFrame(()=>{ const el=document.querySelector(`#feed .reel[data-id="${row.id}"]`); if(el) el.scrollIntoView(); });
+    });
+    grid.appendChild(b);
+  });
+}
+function updateUserFollowBtn(){
+  const btn=$("#userFollowBtn"); if(!btn || !profileUserId) return;
+  const on=state.following.has(profileUserId);
+  btn.textContent=on ? "Following" : "Follow";
+  btn.className="btn "+(on ? "btn-ghost" : "btn-teal");
+}
+$("#userFollowBtn").addEventListener("click", async ()=>{
+  if(!profileUserId) return;
+  await toggleFollow(profileUserId);
+  updateUserFollowBtn();
+});
+$("#userMsgBtn").addEventListener("click", ()=>{
+  if(!profileUserId) return;
+  const id=profileUserId; closeSheets(); startDM(id);
+});
+
 $("#commentForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const input=$("#commentInput"); const text=input.value.trim(); if(!text) return;
   const v=VIDEOS.find(x=>x.id===state.commentVideoId); if(!v) return;
-  const { data, error } = await sb.from("reelio_comments").insert({ post_id:v.id, user_id:ME.id, content:text }).select().single();
+  const payload={ post_id:v.id, user_id:ME.id, content:text };
+  if(replyTo) payload.parent_id=replyTo.id;
+  let { data, error } = await sb.from("reelio_comments").insert(payload).select().single();
+  if(error && replyTo && /parent_id/.test(error.message||"")){
+    delete payload.parent_id;
+    ({ data, error } = await sb.from("reelio_comments").insert(payload).select().single());
+  }
   if(error){ toast("Couldn't post that comment"); return; }
   input.value=""; autoGrow(input);
-  if(v.commentsLoaded){ v.comments.push({ id:data.id, who:ME.id, text, time:"now" }); renderComments(); $("#commentList").scrollTop=1e6; }
+  const nc=commentVM(data);
+  if(replyTo && !data.parent_id) nc.parentId=replyTo.id;
+  clearReplyTo();
+  if(v.commentsLoaded){ v.comments.push(nc); renderComments(); $("#commentList").scrollTop=1e6; }
   v.commentCount+=1;
-  const cc=document.querySelector(`#feed [data-comments="${v.id}"] span:last-child`); if(cc) cc.textContent=fmt(v.commentCount);
-  $("#commentsTitle").textContent=`Comments · ${fmt(v.commentCount)}`;
+  syncCommentCount(v);
   toast("Comment posted");
 });
 
@@ -1495,8 +2047,8 @@ function uploadErrorMessage(err){
   if(/invalid mime|mime type/i.test(m)) return "That file type isn't allowed.";
   return m ? "Post failed — "+m : "Post failed — try again";
 }
-let uploadURL=null, uploadType=null, uploadFile=null;
-function openUpload(){ openSheet("uploadSheet"); }
+let uploadURL=null, uploadType=null, uploadFile=null, pendingAudio=null;
+function openUpload(){ openSheet("uploadSheet"); updateAudioField(); }
 $("#sideUpload").addEventListener("click", openUpload);
 $("#mobileUpload").addEventListener("click", openUpload);
 $("#profileUpload").addEventListener("click", openUpload);
@@ -1515,14 +2067,31 @@ $$("[data-pick]").forEach(b=>b.addEventListener("click", ()=>{ $("#"+b.dataset.p
       : `<img src="${uploadURL}" alt="Your post preview" />`;
     $("#pickGrid").style.display="none";
     $("#pickChange").classList.add("show");
+    updateAudioField();
   });
 });
+function updateAudioField(){
+  const field=$("#audioField"); if(!field) return;
+  const isVideo = uploadType==="video";
+  field.style.display = isVideo ? "" : "none";
+  if(!isVideo) return;
+  const chip=$("#audioChip"), nameWrap=$("#audioNameWrap");
+  if(pendingAudio){
+    chip.style.display="flex"; nameWrap.style.display="none";
+    $("#audioChipTitle").textContent=pendingAudio.title;
+  } else {
+    chip.style.display="none"; nameWrap.style.display="";
+  }
+}
+$("#audioChipRemove").addEventListener("click", ()=>{ pendingAudio=null; updateAudioField(); });
 function resetUploadPicker(){
   if(uploadURL) URL.revokeObjectURL(uploadURL);
-  uploadURL=null; uploadType=null; uploadFile=null;
+  uploadURL=null; uploadType=null; uploadFile=null; pendingAudio=null;
+  const nameInput=$("#audioName"); if(nameInput) nameInput.value="";
   const prev=$("#uploadPreview"); prev.classList.remove("show"); prev.innerHTML="";
   $("#pickGrid").style.display="grid";
   $("#pickChange").classList.remove("show");
+  updateAudioField();
 }
 $("#pickChange").addEventListener("click", resetUploadPicker);
 $("#uploadPost").addEventListener("click", async ()=>{
@@ -1537,14 +2106,40 @@ $("#uploadPost").addEventListener("click", async ()=>{
     const mediaUrl=sb.storage.from("reelio-media").getPublicUrl(path).data.publicUrl;
     const caption=$("#uploadCaption").value.trim() || "Fresh off the camera roll.";
     const tags=parseHashtags(caption);
-    const { data, error } = await sb.from("reelio_posts").insert({
-      user_id: ME.id, media_url: mediaUrl, media_type: uploadType, caption, tags
-    }).select().single();
+    /* Audio: reuse the attached track (bump its use count) or mint a new
+       one from this video's own sound so other people can reuse it. Audio
+       problems never block the post itself. */
+    let audioId=null;
+    if(uploadType==="video"){
+      if(pendingAudio){
+        audioId=pendingAudio.id;
+        try{
+          pendingAudio.useCount=(pendingAudio.useCount||0)+1;
+          await sb.from("reelio_audio").update({ use_count:pendingAudio.useCount }).eq("id", audioId);
+        }catch(e){}
+      } else {
+        try{
+          const title=$("#audioName").value.trim() || ("Original audio — @"+ME.username);
+          const { data:aRow, error:aErr } = await sb.from("reelio_audio")
+            .insert({ user_id:ME.id, audio_url:mediaUrl, title, use_count:1 }).select().single();
+          if(!aErr && aRow){ audioId=aRow.id; AUDIOS.set(aRow.id, audioVM(aRow)); }
+        }catch(e){}
+      }
+    }
+    const payload={ user_id: ME.id, media_url: mediaUrl, media_type: uploadType, caption, tags };
+    if(audioId) payload.audio_id=audioId;
+    let { data, error } = await sb.from("reelio_posts").insert(payload).select().single();
+    if(error && audioId && /audio_id/.test(error.message||"")){
+      delete payload.audio_id;
+      ({ data, error } = await sb.from("reelio_posts").insert(payload).select().single());
+    }
     if(error) throw error;
     const v=postVM(data, 0, 0);
     VIDEOS.unshift(v); state.myPosts.unshift(v);
+    rebuildTagCounts();
     resetUploadPicker();
     $("#uploadCaption").value="";
+    hideTagSuggest();
     closeSheets(); switchView("feed"); state.feedTab="foryou";
     $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou"));
     renderFeed(); $("#feed").scrollTop=0; renderProfileGrid(); renderStats(); renderThumbs(VIDEOS);
@@ -1554,6 +2149,90 @@ $("#uploadPost").addEventListener("click", async ()=>{
   }finally{
     btn.disabled=false; btn.textContent="Post";
   }
+});
+
+/* ================= HASHTAG SUGGESTIONS ================= */
+/* While a #tag is being typed in the caption, tags already used on
+   Reelio drop down under the field with their post counts (YouTube
+   style). Tapping one completes the tag at the caret. */
+function hideTagSuggest(){
+  const box=$("#tagSuggest"); if(!box) return;
+  box.classList.remove("show"); box.innerHTML="";
+}
+function updateTagSuggest(){
+  const ta=$("#uploadCaption"), box=$("#tagSuggest");
+  if(!ta || !box) return;
+  const pos=ta.selectionStart || 0;
+  const m=ta.value.slice(0, pos).match(/#([\p{L}\p{N}_]*)$/u);
+  if(!m){ hideTagSuggest(); return; }
+  const prefix=m[1].toLowerCase();
+  const entries=Object.entries(TAG_COUNTS)
+    .filter(([t])=>t.startsWith(prefix))
+    .sort((a,b)=> b[1]-a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 6);
+  if(!entries.length){ hideTagSuggest(); return; }
+  box.innerHTML=entries.map(([t,n])=>`<button type="button" class="tag-opt" data-tag="${t}"><b>#${t}</b><span>${n} post${n===1?"":"s"}</span></button>`).join("");
+  box.classList.add("show");
+  box.querySelectorAll("[data-tag]").forEach(b=>b.addEventListener("mousedown", e=>{
+    e.preventDefault();
+    insertTagSuggestion(b.dataset.tag);
+  }));
+}
+function insertTagSuggestion(tag){
+  const ta=$("#uploadCaption");
+  const pos=ta.selectionStart || 0;
+  const before=ta.value.slice(0, pos), after=ta.value.slice(pos);
+  const m=before.match(/#([\p{L}\p{N}_]*)$/u);
+  if(!m) return;
+  const start=pos - m[0].length;
+  const insert="#"+tag+" ";
+  ta.value=before.slice(0, start)+insert+after;
+  const np=start+insert.length;
+  ta.focus(); ta.setSelectionRange(np, np);
+  hideTagSuggest();
+}
+$("#uploadCaption").addEventListener("input", updateTagSuggest);
+$("#uploadCaption").addEventListener("keyup", updateTagSuggest);
+$("#uploadCaption").addEventListener("click", updateTagSuggest);
+$("#uploadCaption").addEventListener("blur", ()=>setTimeout(hideTagSuggest, 160));
+
+/* ================= AUDIO SHEET ================= */
+let currentAudio=null;
+async function openAudioSheet(audioId){
+  const a=AUDIOS.get(audioId); if(!a) return;
+  currentAudio=a;
+  await ensureProfiles([a.userId]);
+  const creator=profOf(a.userId);
+  $("#audioTitle").textContent=a.title;
+  $("#audioBy").textContent="by @"+creator.username;
+  $("#audioUses").textContent="Used in "+fmt(a.useCount||0)+" post"+(a.useCount===1?"":"s");
+  const prev=$("#audioPreview");
+  prev.src=a.url || ""; prev.style.display=a.url ? "" : "none";
+  const box=$("#audioPosts"); box.innerHTML="";
+  const users=VIDEOS.filter(v=>v.audioId===audioId);
+  if(!users.length){
+    box.innerHTML='<p class="empty-note" style="padding:6px 0;">No posts with this audio yet — be the first to use it.</p>';
+  }
+  users.forEach(v=>{
+    const b=document.createElement("button"); b.className="audio-post-row";
+    b.innerHTML=`<span class="apr-thumb">${thumbMedia(v, "Post by "+esc(v.author))}</span><span class="apr-main"><b></b><span>@${esc(profOf(v.userId).username)}</span></span>`;
+    b.querySelector("b").textContent=v.caption || "Untitled post";
+    b.addEventListener("click", ()=>{
+      closeSheets(); switchView("feed"); state.feedTab="foryou";
+      $$("[data-feedtab]").forEach(x=>x.classList.toggle("on", x.dataset.feedtab==="foryou"));
+      renderFeed();
+      requestAnimationFrame(()=>{ const el=document.querySelector(`#feed .reel[data-id="${v.id}"]`); if(el) el.scrollIntoView(); });
+    });
+    box.appendChild(b);
+  });
+  openSheet("audioSheet");
+}
+$("#useAudioBtn").addEventListener("click", ()=>{
+  if(!currentAudio) return;
+  pendingAudio=currentAudio;
+  closeSheets();
+  openUpload();
+  toast("Audio attached — pick a video and it'll post with this sound");
 });
 
 /* ================= INBOX / CHATS ================= */
@@ -1974,7 +2653,8 @@ function subscribeRealtime(){
       if(state.commentVideoId===pid && $("#commentsSheet").classList.contains("show")){
         ensureProfiles([payload.new.user_id]).then(()=>{
           if(v.commentsLoaded && payload.new.user_id!==ME.id){
-            v.comments.push({ id:payload.new.id, who:payload.new.user_id, text:payload.new.content, time:"now" });
+            const nc=commentVM(payload.new); nc.time="now";
+            v.comments.push(nc);
             renderComments();
           }
         });
@@ -2187,7 +2867,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.4.6";
+const APP_VERSION = "1.5.0";
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
 function versionParts(v){ return String(v||"0").split(".").map(n=>parseInt(n,10)||0); }
 function isNewer(remote, local){
@@ -2307,9 +2987,42 @@ function initUpdates(){
   checkForUpdates({});
 }
 
+/* ================= THEME ================= */
+/* Dark is Reelio's home look. Picking Light or Dark in Settings restyles
+   the whole app by stamping data-theme on <html>, which wins over the
+   system scheme in the CSS. The choice lasts for the session, like chat
+   wallpapers. */
+let themeChoice = null;              // 'light' | 'dark' | null (follow system)
+function effectiveTheme(){
+  if(themeChoice) return themeChoice;
+  return (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
+}
+function applyThemeUI(){
+  const eff=effectiveTheme();
+  if(themeChoice) document.documentElement.setAttribute("data-theme", themeChoice);
+  else document.documentElement.removeAttribute("data-theme");
+  const dBtn=$("#themeDark"), lBtn=$("#themeLight");
+  if(dBtn) dBtn.classList.toggle("on", eff==="dark");
+  if(lBtn) lBtn.classList.toggle("on", eff==="light");
+  const col = eff==="dark" ? "#000000" : "#f4f4f2";
+  $$('meta[name="theme-color"]').forEach(m=>m.setAttribute("content", col));
+}
+function setTheme(t){
+  themeChoice=t;
+  applyThemeUI();
+  toast(t==="dark" ? "Dark theme on" : "Light theme on");
+}
+function initTheme(){
+  const dBtn=$("#themeDark"), lBtn=$("#themeLight");
+  if(dBtn) dBtn.addEventListener("click", ()=>setTheme("dark"));
+  if(lBtn) lBtn.addEventListener("click", ()=>setTheme("light"));
+  applyThemeUI();
+}
+
 /* ================= BOOT ================= */
 (async function boot(){
   try{ initUpdates(); }catch(e){}
+  try{ initTheme(); }catch(e){}
   if(!sb){
     $("#bootSplash").classList.add("hide");
     $("#authGate").classList.add("show");
