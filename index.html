@@ -13,6 +13,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
+<meta name="app-version" content="1.4.0" />
 <title>Reelio</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -448,6 +449,29 @@
   @keyframes ringpulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.08);}}
   .thread-call-btns{display:flex; gap:2px;}
   .msg-media{max-width:230px; border-radius:14px; margin-bottom:5px;}
+
+  /* ---------- Updates ---------- */
+  .update-banner{position:fixed; left:50%; top:calc(12px + env(safe-area-inset-top)); transform:translateX(-50%) translateY(-16px); z-index:400; width:min(440px, calc(100vw - 24px)); background:var(--bg-2); color:var(--text); border:1px solid rgba(23,195,178,.55); border-radius:16px; box-shadow:0 18px 50px rgba(0,0,0,.5); padding:14px 16px; display:none; align-items:center; gap:12px; opacity:0; transition:opacity .25s, transform .25s;}
+  .update-banner.show{display:flex; opacity:1; transform:translateX(-50%) translateY(0);}
+  .update-banner .ring{width:36px; height:36px; border-width:5px; flex:none;}
+  .update-banner .ub-main{flex:1; min-width:0;}
+  .update-banner .ub-main b{display:block; font-size:15px; line-height:1.25;}
+  .update-banner .ub-main span{display:block; font-size:13px; color:var(--text-2); line-height:1.4; margin-top:2px;}
+  .update-banner .ub-actions{display:flex; flex-direction:column; gap:6px; flex:none;}
+  .update-banner .ub-update{background:var(--teal); color:#032723; font-weight:800; font-size:13.5px; border-radius:9px; padding:8px 14px; white-space:nowrap;}
+  .update-banner .ub-update:hover{background:var(--teal-bright);}
+  .update-banner .ub-later{font-size:12.5px; font-weight:600; color:var(--text-2); padding:2px 6px;}
+  @media (max-width:760px){ .update-banner{top:auto; bottom:calc(76px + env(safe-area-inset-bottom));} }
+  .setting-row{display:flex; align-items:center; gap:12px; padding:13px 0; border-bottom:1px solid var(--line-soft);}
+  .setting-row:last-child{border-bottom:none;}
+  .setting-row .sr-main{flex:1; min-width:0;}
+  .setting-row .sr-main b{display:block; font-size:15px;}
+  .setting-row .sr-main span{display:block; font-size:13px; color:var(--text-2); line-height:1.45; margin-top:2px;}
+  .setting-row .btn{flex:none; padding:9px 16px; font-size:13.5px;}
+  .update-status{font-size:13px; line-height:1.5; margin:10px 0 0; color:var(--text-2); display:none;}
+  .update-status.show{display:block;}
+  .update-status.ok{color:var(--teal);}
+  .version-line{font-size:12px; color:var(--text-3); padding:10px 2px 0;}
 </style>
 </head>
 <body>
@@ -475,6 +499,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
+      <p class="version-line">Reelio v<span class="app-version">1.4.0</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -585,6 +610,7 @@
           <div class="profile-actions">
             <button class="btn btn-teal" id="profileUpload">Create a post</button>
             <button class="btn btn-ghost" id="editProfileBtn">Edit profile</button>
+            <button class="btn btn-ghost" id="settingsBtn">Settings</button>
             <button class="btn btn-ghost" id="signOutBtn">Sign out</button>
           </div>
           <div class="profile-tabs">
@@ -780,6 +806,36 @@
   </div>
 </div>
 
+<!-- ============ UPDATE AVAILABLE ============ -->
+<div class="update-banner" id="updateBanner" role="alert">
+  <div class="ring" aria-hidden="true"></div>
+  <div class="ub-main"><b>Update Available</b><span id="updateBannerText">A new version of Reelio is ready. Tap Update to load it — no reinstall needed.</span></div>
+  <div class="ub-actions">
+    <button class="ub-update" id="updateNowBtn">Update</button>
+    <button class="ub-later" id="updateLaterBtn">Later</button>
+  </div>
+</div>
+
+<!-- ============ SETTINGS SHEET ============ -->
+<section class="sheet" id="settingsSheet" aria-label="Settings">
+  <div class="sheet-grab"></div>
+  <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="sheet-body">
+    <div class="setting-row">
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.4.0</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+    </div>
+    <div class="setting-row">
+      <div class="sr-main"><b>Check for Updates</b><span>Reelio also checks automatically every time it opens.</span></div>
+      <button class="btn btn-teal" id="checkUpdateBtn">Check</button>
+    </div>
+    <p class="update-status" id="updateStatus" role="status"></p>
+    <div class="setting-row">
+      <div class="sr-main"><b>Account</b><span id="settingsAccount">Signed in</span></div>
+      <button class="btn btn-ghost" id="settingsSignOutBtn">Sign out</button>
+    </div>
+  </div>
+</section>
+
 <!-- Floating UI -->
 <div class="menu" id="msgMenu"></div>
 <div class="react-pop" id="reactPop"></div>
@@ -880,7 +936,12 @@ $("#authForm").addEventListener("submit", async e=>{
       const { data, error } = await sb.auth.signUp({ email, password });
       if(error) throw error;
       if(!data.user) throw new Error("Something went wrong signing up. Try again.");
-      if(!data.session) throw new Error("Account created — check your email to confirm, then log in.");
+      if(!data.session){
+        // No confirmation step — sign straight in with the password just set.
+        const { data: signedIn, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
+        if(signInErr || !signedIn.user) throw new Error("Account created — tap Log in to jump straight in.");
+        data.user = signedIn.user; data.session = signedIn.session;
+      }
       const { error: pErr } = await sb.from("reelio_profiles").insert({
         id:data.user.id, username, display_name: displayName || username, bio:""
       });
@@ -892,7 +953,9 @@ $("#authForm").addEventListener("submit", async e=>{
       await enterApp(data.user);
     }
   }catch(err){
-    authError(err.message || "Something went wrong. Try again.");
+    let msg = err.message || "Something went wrong. Try again.";
+    if(/email not confirmed|confirm your email|confirmation/i.test(msg)) msg = "That login didn't go through — try again, or create the account once more.";
+    authError(msg);
   }finally{
     btn.disabled=false;
   }
@@ -2024,8 +2087,117 @@ function resetCall(){
   callState="idle"; callPeerId=null; pendingOffer=null; iceQueue=[];
 }
 
+/* ================= UPDATES ================= */
+const APP_VERSION = "1.4.0";
+let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
+function versionParts(v){ return String(v||"0").split(".").map(n=>parseInt(n,10)||0); }
+function isNewer(remote, local){
+  const a=versionParts(remote), b=versionParts(local), len=Math.max(a.length,b.length);
+  for(let i=0;i<len;i++){ if((a[i]||0)>(b[i]||0)) return true; if((a[i]||0)<(b[i]||0)) return false; }
+  return false;
+}
+let pendingVersion = null;
+function showUpdateBanner(remoteVersion){
+  const banner=$("#updateBanner"); if(!banner) return;
+  pendingVersion = remoteVersion || pendingVersion || "sw";
+  if(remoteVersion) $("#updateBannerText").textContent = "Reelio v"+remoteVersion+" is ready. Tap Update to load it — no reinstall needed.";
+  banner.classList.add("show");
+}
+function hideUpdateBanner(){ const b=$("#updateBanner"); if(b) b.classList.remove("show"); }
+function setUpdateStatus(msg, ok){
+  const el=$("#updateStatus"); if(!el) return;
+  el.textContent=msg||""; el.classList.toggle("show", !!msg); el.classList.toggle("ok", !!ok);
+}
+async function fetchRemoteVersion(){
+  const res = await fetch("assets/version.json?t="+Date.now(), { cache:"no-store" });
+  if(!res.ok) throw new Error("version check failed");
+  return res.json();
+}
+async function checkForUpdates(opts){
+  opts = opts || {};
+  const manual = !!opts.manual;
+  if(manual) setUpdateStatus("Checking for updates…");
+  let remote = null;
+  try{ remote = await fetchRemoteVersion(); }catch(e){ if(manual) setUpdateStatus("Couldn't check just now — check your connection and try again."); }
+  // Also nudge the service worker to look for a new worker file.
+  if(swReg){ try{ await swReg.update(); }catch(e){} if(swReg.waiting) waitingSW = swReg.waiting; }
+  const remoteVersion = remote && remote.version;
+  if((remoteVersion && isNewer(remoteVersion, APP_VERSION)) || waitingSW){
+    const v = remoteVersion && isNewer(remoteVersion, APP_VERSION) ? remoteVersion : null;
+    if(manual) setUpdateStatus("Update available — tap Update on the prompt to install v"+(v||"the latest version")+".");
+    if(updateDismissedFor !== (v || "sw")) showUpdateBanner(v);
+    return true;
+  }
+  if(manual) setUpdateStatus("You're up to date — Reelio v"+APP_VERSION+" is the latest version.", true);
+  return false;
+}
+async function hardReloadFresh(){
+  // Primary update path for home-screen installs: clear Cache Storage,
+  // then navigate to a cache-busted URL so the browser fetches the new
+  // index.html from the network instead of any HTTP/PWA cache. This works
+  // even where the service worker (in assets/) cannot control the root page.
+  try{ if("caches" in window){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); } }catch(e){}
+  try{
+    const params=new URLSearchParams(window.location.search);
+    params.set("v", pendingVersion || APP_VERSION);
+    params.set("t", Date.now()+"");
+    location.replace(window.location.pathname + "?" + params.toString() + window.location.hash);
+  }catch(e){ location.reload(); }
+}
+async function applyUpdate(){
+  if(updateApplying) return;
+  updateApplying = true;
+  const btn=$("#updateNowBtn"); if(btn) btn.textContent="Updating…";
+  try{
+    if(waitingSW || (swReg && swReg.waiting)){
+      const w = waitingSW || swReg.waiting;
+      w.postMessage({ type:"SKIP_WAITING" });
+      setTimeout(hardReloadFresh, 1400); // fallback if controllerchange doesn't fire
+      return;
+    }
+  }catch(e){}
+  await hardReloadFresh();
+}
+function trackInstallingWorker(worker){
+  if(!worker) return;
+  worker.addEventListener("statechange", ()=>{
+    if(worker.state==="installed" && navigator.serviceWorker && navigator.serviceWorker.controller){
+      waitingSW = worker; showUpdateBanner(null);
+    }
+  });
+}
+function initUpdates(){
+  // Clean the cache-bust params left by an update reload, without reloading.
+  try{ const p=new URLSearchParams(window.location.search); if(p.has("t")){ p.delete("t"); p.delete("v"); const qs=p.toString(); history.replaceState(null, "", window.location.pathname + (qs ? "?"+qs : "") + window.location.hash); } }catch(e){}
+  $$(".app-version").forEach(el=>{ el.textContent = APP_VERSION; });
+  const nowBtn=$("#updateNowBtn"), laterBtn=$("#updateLaterBtn");
+  if(nowBtn) nowBtn.addEventListener("click", applyUpdate);
+  if(laterBtn) laterBtn.addEventListener("click", ()=>{ updateDismissedFor = pendingVersion || "sw"; hideUpdateBanner(); toast("Okay — you'll get the update next time you open Reelio"); });
+  const checkBtn=$("#checkUpdateBtn");
+  if(checkBtn) checkBtn.addEventListener("click", ()=>checkForUpdates({ manual:true }));
+  const openSettings = ()=>{ const acct=$("#settingsAccount"); if(acct && ME) acct.textContent = "Signed in as "+(ME.display_name||ME.username)+" ("+"@"+ME.username+")"; setUpdateStatus(""); openSheet("settingsSheet"); };
+  const sb1=$("#settingsBtn"); if(sb1) sb1.addEventListener("click", openSettings);
+  const sb2=$("#sideSettingsBtn"); if(sb2) sb2.addEventListener("click", openSettings);
+  const so=$("#settingsSignOutBtn"); if(so) so.addEventListener("click", async ()=>{ closeSheets(); const b=$("#signOutBtn"); if(b) b.click(); else if(sb){ await sb.auth.signOut(); location.reload(); } });
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.addEventListener("controllerchange", ()=>{ if(updateApplying || waitingSW) location.reload(); });
+    navigator.serviceWorker.register("assets/sw.js").then(reg=>{
+      swReg = reg;
+      if(reg.waiting && navigator.serviceWorker.controller){ waitingSW = reg.waiting; showUpdateBanner(null); }
+      if(reg.installing) trackInstallingWorker(reg.installing);
+      reg.addEventListener("updatefound", ()=>trackInstallingWorker(reg.installing));
+    }).catch(()=>{ /* version.json checks still cover updates if SW is unavailable */ });
+  }
+  // Check on launch, when the app comes back to the foreground, and every 30 min.
+  checkForUpdates({});
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") checkForUpdates({}); });
+  window.addEventListener("focus", ()=>checkForUpdates({}));
+  setInterval(()=>checkForUpdates({}), 30*60*1000);
+}
+
 /* ================= BOOT ================= */
 (async function boot(){
+  try{ initUpdates(); }catch(e){}
   if(!sb){
     $("#bootSplash").classList.add("hide");
     $("#authGate").classList.add("show");
