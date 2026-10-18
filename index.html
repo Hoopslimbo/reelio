@@ -18,8 +18,48 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Reelio" />
-<meta name="app-version" content="1.5.4" />
+<meta name="app-version" content="1.5.6" />
 <title>Reelio</title>
+<script>
+/* iOS home-screen viewport gap: on some iPhones the standalone app's
+   layout viewport stops short of the physical screen (measured on a
+   390x844 phone: content ended at 797pt, leaving a 47pt pure-black strip
+   under the bottom nav that no element could paint, because 100dvh and
+   position:fixed both anchor to the short viewport). The physical screen
+   height from window.screen is the true bottom edge, so when the app runs
+   standalone and the screen is taller than the layout viewport by a
+   status-bar-sized amount, expose the difference as --app-h / --vh-gap and
+   let the CSS stretch the shell, overlays and bottom nav by exactly that
+   much. Anywhere else (browser tab, desktop, unaffected devices) the vars
+   stay unset and every rule falls back to the plain 100dvh layout. */
+(function(){
+  function fixViewportGap(){
+    var root = document.documentElement;
+    var standalone = (window.navigator && window.navigator.standalone === true)
+      || window.matchMedia("(display-mode: standalone)").matches
+      || window.matchMedia("(display-mode: fullscreen)").matches;
+    var gap = 0, target = 0;
+    if(standalone && window.screen && window.innerWidth <= 820){
+      var sw = window.screen.width, sh = window.screen.height;
+      target = (window.innerWidth > window.innerHeight) ? Math.min(sw, sh) : Math.max(sw, sh);
+      gap = target - root.clientHeight;
+      if(gap < 1 || gap > 120) gap = 0;
+    }
+    if(gap > 0){
+      root.style.setProperty("--app-h", target + "px");
+      root.style.setProperty("--vh-gap", gap + "px");
+    }else{
+      root.style.removeProperty("--app-h");
+      root.style.removeProperty("--vh-gap");
+    }
+  }
+  fixViewportGap();
+  document.addEventListener("DOMContentLoaded", fixViewportGap);
+  window.addEventListener("load", fixViewportGap);
+  window.addEventListener("resize", fixViewportGap);
+  window.addEventListener("orientationchange", function(){ setTimeout(fixViewportGap, 60); });
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root{
@@ -55,7 +95,7 @@
     --bubble-me:#0e5f56; --bubble-them:#232326;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{height:100%; width:100%; max-width:100%; overflow-x:hidden; overscroll-behavior:none;}
+  html,body{height:var(--app-h, 100%); width:100%; max-width:100%; overflow-x:hidden; overscroll-behavior:none;}
   html{-webkit-text-size-adjust:100%; text-size-adjust:100%; background:var(--bg);}
   body{margin:0; font-family:var(--font); background:var(--bg); color:var(--text); overflow:hidden; overflow-x:hidden; max-width:100vw; touch-action:manipulation;}
   button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
@@ -70,7 +110,7 @@
   ::selection{background:var(--teal); color:#04241f;}
 
   /* ---------- App frame ---------- */
-  .app{display:grid; grid-template-columns:236px minmax(0,1fr) 300px; height:100dvh; width:100%; max-width:100vw; overflow:hidden;}
+  .app{display:grid; grid-template-columns:236px minmax(0,1fr) 300px; height:var(--app-h, 100dvh); width:100%; max-width:100vw; overflow:hidden;}
   .rail-right{display:block;}
   @media (max-width:1240px){ .app{grid-template-columns:236px minmax(0,1fr);} .rail-right{display:none;} }
   @media (max-width:760px){ .app{grid-template-columns:minmax(0,1fr);} }
@@ -107,7 +147,7 @@
   .avatar.xl{width:96px; height:96px; font-size:36px;}
 
   /* ---------- Main / views ---------- */
-  .main{position:relative; min-width:0; max-width:100%; overflow-x:hidden; height:100dvh; background:var(--bg); box-sizing:border-box;}
+  .main{position:relative; min-width:0; max-width:100%; overflow-x:hidden; height:var(--app-h, 100dvh); background:var(--bg); box-sizing:border-box;}
   /* Dark scheme is the default. One continuous black from behind the status
      bar down through the feed: html/body are pure black and .main paints no
      band of its own — there is deliberately no safe-area padding strip on
@@ -122,8 +162,8 @@
   html[data-theme="dark"] .main{background:transparent;}
   html[data-theme="light"], html[data-theme="light"] body{background:var(--bg);}
   html[data-theme="light"] .main{background:var(--bg);}
-  html[data-theme="light"] .bottom-nav{background:rgba(255,255,255,.94); border-top-color:rgba(0,0,0,.08);}
-  html[data-theme="dark"] .bottom-nav{background:rgba(8,8,9,.92); border-top-color:rgba(255,255,255,.08);}
+  html[data-theme="light"] .bottom-nav{background:linear-gradient(to top, rgba(255,255,255,.8), rgba(255,255,255,.55) 58%, rgba(255,255,255,.28)); border-top-color:rgba(0,0,0,.06);}
+  html[data-theme="dark"] .bottom-nav{background:linear-gradient(to top, rgba(4,4,5,.6), rgba(4,4,5,.36) 58%, rgba(4,4,5,.12)); border-top-color:rgba(255,255,255,.07);}
   html[data-theme="light"] .msg-row.me .bubble{color:#fff;}
   html[data-theme="dark"] .wp-teal{background:linear-gradient(160deg, #06231f, #0a3a33 55%, #06231f);}
   html[data-theme="dark"] .wp-sunset{background:linear-gradient(165deg, #2b1530, #57253a 55%, #8a3b2e);}
@@ -179,9 +219,6 @@
   .rail-btn svg{width:25px; height:25px;}
   .rail-btn.liked .ic svg{fill:var(--heart); stroke:var(--heart);}
   .rail-btn.saved .ic svg{fill:#ffd34d; stroke:#ffd34d;}
-  .rail-avatar{position:relative; margin-bottom:4px;}
-  .rail-avatar .plus{position:absolute; left:50%; bottom:-8px; transform:translateX(-50%); width:19px; height:19px; border-radius:50%; background:var(--teal); color:#032723; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; line-height:1;}
-  .rail-avatar .plus.done{background:#fff; font-size:11px;}
   .reel-progress{position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(255,255,255,.22); z-index:7;}
   .reel-progress i{display:block; height:100%; width:0%; background:var(--teal-bright);}
   .reel-card.playing .reel-progress i{animation:prog 14s linear infinite;}
@@ -446,16 +483,22 @@
   .thumb video{width:100%; height:100%; object-fit:cover; transition:transform .3s;}
   .thumb:hover video{transform:scale(1.05);}
 
-  .toast{position:fixed; left:50%; bottom:96px; transform:translateX(-50%) translateY(20px); background:#1d2b28; color:#eafffb; border:1px solid rgba(46,230,207,.35); padding:11px 18px; border-radius:999px; font-size:14px; font-weight:600; z-index:200; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; max-width:88vw; text-align:center; box-shadow:0 14px 40px rgba(0,0,0,.45);}
-  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast{position:fixed; left:50%; bottom:96px; transform:translateX(-50%) translateY(calc(20px + var(--vh-gap, 0px))); background:#1d2b28; color:#eafffb; border:1px solid rgba(46,230,207,.35); padding:11px 18px; border-radius:999px; font-size:14px; font-weight:600; z-index:200; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; max-width:88vw; text-align:center; box-shadow:0 14px 40px rgba(0,0,0,.45);}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(var(--vh-gap, 0px));}
   @media (min-width:761px){ .toast{bottom:34px;} }
 
   /* ---------- Bottom nav (mobile) ---------- */
   .bottom-nav{display:none;}
   @media (max-width:760px){
     .sidebar{display:none;}
-    .bottom-nav{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:60; background:rgba(8,8,9,.92); backdrop-filter:blur(14px); border-top:1px solid rgba(255,255,255,.08); padding:6px 8px calc(6px + env(safe-area-inset-bottom)); justify-content:space-around;}
-    @media (prefers-color-scheme: light){ .bottom-nav{background:rgba(255,255,255,.94); border-top-color:rgba(0,0,0,.08);} }
+    /* The nav is an overlay, not a bar: the feed runs the full 100dvh
+       underneath it (see #view-feed's padding-bottom:0 and .feed inset:0),
+       and the nav paints only a translucent gradient + blur — including
+       through its safe-area padding, so the strip behind the home
+       indicator shows the video too instead of a solid black band. Do not
+       give it an opaque background again. */
+    .bottom-nav{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:60; background:linear-gradient(to top, rgba(4,4,5,.6), rgba(4,4,5,.36) 58%, rgba(4,4,5,.12)); backdrop-filter:blur(18px) saturate(1.25); -webkit-backdrop-filter:blur(18px) saturate(1.25); border-top:1px solid rgba(255,255,255,.07); padding:6px 8px calc(6px + env(safe-area-inset-bottom)); justify-content:space-around;}
+    @media (prefers-color-scheme: light){ .bottom-nav{background:linear-gradient(to top, rgba(255,255,255,.8), rgba(255,255,255,.55) 58%, rgba(255,255,255,.28)); border-top-color:rgba(0,0,0,.06);} }
     .bottom-nav button{display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; font-weight:600; color:var(--text-2); padding:4px 10px; position:relative;}
     .bottom-nav button.on{color:var(--text);}
     .bottom-nav svg{width:24px; height:24px;}
@@ -508,8 +551,8 @@
   .msg-media{max-width:230px; border-radius:14px; margin-bottom:5px;}
 
   /* ---------- Updates ---------- */
-  .update-banner{position:fixed; left:50%; top:calc(12px + env(safe-area-inset-top)); transform:translateX(-50%) translateY(-16px); z-index:400; width:min(440px, calc(100vw - 24px)); background:var(--bg-2); color:var(--text); border:1px solid rgba(23,195,178,.55); border-radius:16px; box-shadow:0 18px 50px rgba(0,0,0,.5); padding:14px 16px; display:none; align-items:center; gap:12px; opacity:0; transition:opacity .25s, transform .25s;}
-  .update-banner.show{display:flex; opacity:1; transform:translateX(-50%) translateY(0);}
+  .update-banner{position:fixed; left:50%; top:calc(12px + env(safe-area-inset-top)); transform:translateX(-50%) translateY(calc(-16px + var(--vh-gap, 0px))); z-index:400; width:min(440px, calc(100vw - 24px)); background:var(--bg-2); color:var(--text); border:1px solid rgba(23,195,178,.55); border-radius:16px; box-shadow:0 18px 50px rgba(0,0,0,.5); padding:14px 16px; display:none; align-items:center; gap:12px; opacity:0; transition:opacity .25s, transform .25s;}
+  .update-banner.show{display:flex; opacity:1; transform:translateX(-50%) translateY(var(--vh-gap, 0px));}
   .update-banner .ring{width:36px; height:36px; border-width:5px; flex:none;}
   .update-banner .ub-main{flex:1; min-width:0;}
   .update-banner .ub-main b{display:block; font-size:15px; line-height:1.25;}
@@ -540,7 +583,7 @@
   .pencil-btn:active{transform:scale(.92);}
   @media (max-width:760px){
     .sheet{transition:transform .18s ease;}
-    .sheet.expanded{top:0; height:100dvh; max-height:100dvh; border-radius:0;}
+    .sheet.expanded{top:0; height:var(--app-h, 100dvh); max-height:var(--app-h, 100dvh); border-radius:0;}
   }
 
   /* ---------- Audio on reels ---------- */
@@ -660,6 +703,22 @@
   .user-head h3{margin:8px 0 0; font-size:19px; font-family:var(--font-display);}
   .user-head .u-handle{color:var(--text-2); font-size:13.5px;}
   .user-head .u-bio{font-size:14px; line-height:1.5; margin:8px 0 0; max-width:44ch;}
+  /* ---------- Full-screen stretch (iOS standalone gap) ---------- */
+  /* Companion to the head script: when --vh-gap is set, the layout
+     viewport ends that many px above the physical screen bottom. The
+     shell already runs var(--app-h) tall so the feed paints into the
+     strip; these rules move the fixed pieces the same amount so nothing
+     stops short or floats: the bottom nav is nudged down to the true
+     bottom edge (its translucent gradient and the home indicator then sit
+     over the video, no black band underneath), full-screen overlays
+     stretch to cover the strip, and bottom sheets land on the true
+     bottom too. With the var unset every value collapses to 0 and the
+     layout is exactly what it was. */
+  .scrim,.auth-gate,.boot-splash,.call-ui{bottom:calc(-1 * var(--vh-gap, 0px));}
+  @media (max-width:760px){
+    .bottom-nav{transform:translateY(var(--vh-gap, 0px));}
+    .sheet{bottom:calc(-1 * var(--vh-gap, 0px));}
+  }
 </style>
 </head>
 <body>
@@ -687,7 +746,7 @@
         <span class="who"><b id="sideMeName">…</b><span id="sideMeHandle"></span></span>
       </button>
       <p class="side-note">No ads. No shop. No gifts, no coins, nothing to buy — just people and their posts.</p>
-      <p class="version-line">Reelio v<span class="app-version">1.5.4</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
+      <p class="version-line">Reelio v<span class="app-version">1.5.5</span> · <button id="sideSettingsBtn" style="color:var(--teal); font-weight:700; font-size:12px; padding:0;">Settings</button></p>
     </div>
   </aside>
 
@@ -1018,7 +1077,7 @@
   <div class="sheet-head"><h2>Settings</h2><button class="icon-btn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
   <div class="sheet-body">
     <div class="setting-row">
-      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.4</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
+      <div class="sr-main"><b>App version</b><span>You're running Reelio v<span class="app-version">1.5.5</span>. Updates install in place — you never need to delete and re-add the app.</span></div>
     </div>
     <div class="setting-row" style="display:block;">
       <div class="sr-main" style="margin-bottom:9px;"><b>Appearance</b><span>Dark is Reelio's classic look. Light flips the whole app — feed, chats, sheets, everything.</span></div>
@@ -1502,7 +1561,6 @@ function renderFeed(){
         </div>
         ${isPhoto ? "" : `<button class="reel-disc" ${audio ? `data-audio="${audio.id}" aria-label="Audio: ${esc(audio.title)}"` : `data-profile="${v.userId}" aria-label="View ${esc(v.author)}'s profile"`}>${avatarHTML(v,"md")}</button>`}
         <div class="reel-rail">
-          <div class="rail-avatar">${avatarHTML(v,"md")}${v.mine?"":`<span class="plus ${following?"done":""}" data-follow="${v.userId}">${following?"✓":"+"}</span>`}</div>
           <button class="rail-btn ${liked?"liked":""}" data-like="${v.id}"><span class="ic">${heartSVG}</span><span data-likecount="${v.id}">${fmt(v.likes)}</span></button>
           <button class="rail-btn" data-comments="${v.id}"><span class="ic">${commentSVG}</span><span data-ccount="${v.id}">${fmt(v.commentCount)}</span></button>
           <button class="rail-btn ${saved?"saved":""}" data-save="${v.id}"><span class="ic">${bookmarkSVG}</span><span>${saved?"Saved":"Save"}</span></button>
@@ -3016,7 +3074,7 @@ function resetCall(){
 }
 
 /* ================= UPDATES ================= */
-const APP_VERSION = "1.5.4";
+const APP_VERSION = "1.5.6";
 const EDGE_FIX_KEY = "reelio-edgefix-154";
 let swReg = null, waitingSW = null, updateDismissedFor = null, updateApplying = false;
 function versionParts(v){ return String(v||"0").split(".").map(n=>parseInt(n,10)||0); }
