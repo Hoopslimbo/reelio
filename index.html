@@ -413,7 +413,7 @@
   .auth-gate.show{display:flex;}
   .auth-card{width:min(400px,100%); background:var(--bg-2); border:1px solid var(--line-soft); border-radius:20px; padding:30px 28px 26px; box-shadow:0 24px 70px rgba(0,0,0,.35);}
   .auth-card .ring{width:46px; height:46px; border-width:6px; margin:0 auto 14px;}
-  .auth-card h1{font-family:var(--font-display); font-size:26px; margin:0; text-align:center; letter-spacing:-.02em;}
+  .auth-card h1{font-family:var(--font-display); font-size:26px; margin:0 0 20px; text-align:center; letter-spacing:-.02em;}
   .auth-card .auth-sub{text-align:center; color:var(--text-2); font-size:14px; margin:6px 0 20px; line-height:1.5;}
   .auth-tabs{display:flex; background:var(--bg-3); border-radius:11px; padding:4px; margin-bottom:6px;}
   .auth-tabs button{flex:1; padding:9px; border-radius:8px; font-size:14.5px; font-weight:700; color:var(--text-2);}
@@ -734,7 +734,6 @@
   <div class="auth-card">
     <div class="ring" aria-hidden="true"></div>
     <h1>Reelio</h1>
-    <p class="auth-sub" id="authSub">Log in to your account — your posts, messages, and calls are yours alone.</p>
     <div class="auth-tabs">
       <button id="tabLogin" class="on">Log in</button>
       <button id="tabSignup">Sign up</button>
@@ -815,8 +814,8 @@ const profiles = new Map();          // userId -> profile row
 function profOf(id){ return profiles.get(id) || { id, username:"someone", display_name:"Someone", avatar_url:null }; }
 function personShape(p){ return { id:p.id, name:p.display_name||p.username, handle:"@"+p.username, color:colorFor(p.id), initial:(p.display_name||p.username||"?").trim().charAt(0).toUpperCase(), avatarUrl:p.avatar_url||null }; }
 function avatarHTML(person, size){
-  const inner = person.avatarUrl ? `<img src="${person.avatarUrl}" alt="" style="width:100%;height:100%;object-fit:cover;" />` : person.initial;
-  return `<span class="avatar ${size||"md"}" style="background:${person.color}">${inner}</span>`;
+  const img = person.avatarUrl ? `<img src="${person.avatarUrl}" alt="" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />` : "";
+  return `<span class="avatar ${size||"md"}" style="background:${person.color};position:relative;">${person.initial||""}${img}</span>`;
 }
 async function ensureProfiles(ids){
   const missing=[...new Set(ids)].filter(id=>id && !profiles.has(id));
@@ -1319,8 +1318,9 @@ $("#profileSave").addEventListener("click", async ()=>{
   if(username.length<3){ toast("Username needs at least 3 characters"); return; }
   let avatarUrl=ME.avatar_url;
   if(pendingAvatarFile){
-    const path=`avatars/${ME.id}-${Date.now()}`;
-    const { error: upErr } = await sb.storage.from("reelio-media").upload(path, pendingAvatarFile, { upsert:true });
+    const ext=(pendingAvatarFile.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";
+    const path=`avatars/${ME.id}-${Date.now()}.${ext}`;
+    const { error: upErr } = await sb.storage.from("reelio-media").upload(path, pendingAvatarFile, { upsert:true, contentType: pendingAvatarFile.type || "image/jpeg" });
     if(upErr){ toast("Photo upload failed"); return; }
     avatarUrl=sb.storage.from("reelio-media").getPublicUrl(path).data.publicUrl;
   }
