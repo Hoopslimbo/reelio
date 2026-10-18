@@ -2,7 +2,7 @@
    in the background. A new deploy only takes over when the user taps Update
    (the page clears caches and cache-busts). Bump VERSION together with
    version.json and APP_VERSION in index.html. */
-const VERSION = "1.4.6";
+const VERSION = "1.5.0";
 const CACHE = "reelio-v" + VERSION;
 const CORE = [
   "./manifest.webmanifest",
